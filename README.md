@@ -6,9 +6,16 @@
 
 ## المتطلبات
 
-- **Mac** مع **Xcode 15+** (لا يمكن بناء iOS على Windows)
+- **Mac** مع **Xcode 15+** — أو **Codemagic** للبناء من Windows (انظر [CODEMAGIC.md](CODEMAGIC.md))
 - iPhone أو Simulator (iOS 16+)
 - حساب Apple Developer (للتثبيت على جهاز حقيقي أو TestFlight)
+
+## البناء عبر Codemagic (Windows ✅)
+
+1. المستودع على GitHub: `bassamabdulzahra1-dotcom/medfleet-ios`
+2. سجّل في [codemagic.io](https://codemagic.io) واربط المستودع
+3. شغّل workflow **Simulator** للاختبار — أو **IPA** مع Apple Developer
+4. التفاصيل الكاملة: **[CODEMAGIC.md](CODEMAGIC.md)**
 
 ## فتح المشروع على Mac
 

@@ -1,0 +1,91 @@
+# MedFleet iOS — Codemagic CI/CD
+# https://codemagic.io — اربط مستودع GitHub ثم شغّل workflow
+
+definitions:
+  env_ios: &env_ios
+    xcode: latest
+    vars:
+      XCODE_PROJECT: MedFleet.xcodeproj
+      XCODE_SCHEME: MedFleet
+      BUNDLE_ID: net.medfleet.rep
+
+  scripts:
+    xcodegen: &run_xcodegen
+      name: Generate Xcode project (XcodeGen)
+      script: |
+        brew install xcodegen
+        xcodegen generate
+        ls -la MedFleet.xcodeproj
+
+workflows:
+  # ── 1) ابدأ بهذا — بدون Apple Developer ─────────────────────────
+  ios-simulator:
+    name: MedFleet — Simulator (اختبار سريع)
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    environment:
+      <<: *env_ios
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+    scripts:
+      - *run_xcodegen
+      - name: Build for iOS Simulator
+        script: |
+          set -e
+          xcodebuild build \
+            -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            CODE_SIGNING_ALLOWED=NO
+    artifacts:
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      email:
+        recipients:
+          - bassamabdulzahra1@gmail.com
+        notify:
+          success: true
+          failure: true
+
+  # ── 2) IPA للآيفون / TestFlight — يحتاج Apple Developer ───────
+  ios-ipa:
+    name: MedFleet — IPA (iPhone / TestFlight)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      <<: *env_ios
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: net.medfleet.rep
+    scripts:
+      - *run_xcodegen
+      - name: Set up code signing
+        script: xcode-project use-profiles
+      - name: Set build number
+        script: |
+          cd "$CM_BUILD_DIR"
+          agvtool new-version -all "$BUILD_NUMBER"
+      - name: Build IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      email:
+        recipients:
+          - bassamabdulzahra1@gmail.com
+        notify:
+          success: true
+          failure: true
+      # فعّل TestFlight بعد إعداد App Store Connect في Codemagic:
+      # app_store_connect:
+      #   auth: integration
+      #   submit_to_testflight: true
