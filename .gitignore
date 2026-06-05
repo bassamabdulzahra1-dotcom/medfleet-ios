@@ -1,0 +1,8 @@
+.DS_Store
+*.xcuserstate
+xcuserdata/
+DerivedData/
+build/
+MedFleet.xcodeproj/
+*.ipa
+*.dSYM.zip
