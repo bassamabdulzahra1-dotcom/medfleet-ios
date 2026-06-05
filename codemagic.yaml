@@ -57,6 +57,8 @@ workflows:
     name: MedFleet — IPA (iPhone / TestFlight)
     max_build_duration: 60
     instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: medfleet-apple   # ← غيّر الاسم إذا استخدمت اسماً مختلفاً في Codemagic
     environment:
       <<: *env_ios
       ios_signing:
@@ -85,7 +87,6 @@ workflows:
         notify:
           success: true
           failure: true
-      # فعّل TestFlight بعد إعداد App Store Connect في Codemagic:
-      # app_store_connect:
-      #   auth: integration
-      #   submit_to_testflight: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

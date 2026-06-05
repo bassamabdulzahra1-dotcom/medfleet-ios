@@ -33,33 +33,111 @@
 
 ---
 
-## 4. بناء IPA للآيفون (يحتاج Apple Developer ~99$/سنة)
+## 4. ربط حساب Apple Developer (حسابك المطور)
 
-### أ) App Store Connect API Key
+Codemagic **ما يطلب Apple ID وكلمة المرور**. الربط يتم عبر **API Key** + **شهادات التوقيع** — كلها تروح لحسابك أنت في Apple.
 
-1. https://appstoreconnect.apple.com → **Users and Access** → **Integrations** → **App Store Connect API**  
-2. **Generate API Key** (App Manager)  
-3. حمّل ملف `.p8` — مرة واحدة فقط
+```
+┌─────────────────┐     API Key (.p8)      ┌─────────────────┐
+│  Apple Developer │ ───────────────────► │    Codemagic    │
+│  App Store Connect│     Certificate      │  (Mac سحابي)    │
+│  (حسابك أنت)     │     Profile          └────────┬────────┘
+└─────────────────┘                               │
+         ▲                                          │ يبني + يوقّع + يرفع
+         │                                          ▼
+         └──────────── TestFlight / App Store ◄── IPA
+```
 
-### ب) في Codemagic
+### الخطوة 1 — App ID (Apple Developer Portal)
 
-**Team settings** → **Team integrations** → **Developer Portal** → أضف API Key
+1. https://developer.apple.com/account  
+2. **Certificates, Identifiers & Profiles** → **Identifiers** → **+**  
+3. **App IDs** → Bundle ID: **`net.medfleet.rep`**  
+4. اسم: **MedFleet Rep**
 
-**Code signing identities**:
-- **Generate certificate** (Apple Distribution)  
-- **Fetch profiles** لـ Bundle ID: `net.medfleet.rep`
+> إذا موجود مسبقاً — تخطّى هذه الخطوة.
 
-### ج) App Store Connect
+### الخطوة 2 — تطبيق في App Store Connect
 
-1. أنشئ App جديد: Bundle ID `net.medfleet.rep`  
-2. اسم: **MedFleet**
+1. https://appstoreconnect.apple.com  
+2. **Apps** → **+** → **New App**  
+3. الاسم: **MedFleet**  
+4. Bundle ID: **net.medfleet.rep**  
+5. SKU: أي رقم (مثلاً `medfleet-rep-001`)
+
+> **ملاحظة:** Apple ID للتطبيق (رقم) تحتاجه لاحقاً لـ TestFlight التلقائي — من **App Information → Apple ID**.
+
+### الخطوة 3 — API Key (المفتاح اللي يربط Codemagic بحسابك)
+
+1. App Store Connect → **Users and Access**  
+2. **Integrations** → **App Store Connect API**  
+3. **Generate API Key**  
+   - الاسم: `Codemagic`  
+   - Access: **App Manager**  
+4. **Download** ملف `.p8` (مرة واحدة فقط!)  
+5. احفظ **Issuer ID** (فوق الجدول) و **Key ID** (عمود في الجدول)
+
+### الخطوة 4 — أضف المفتاح في Codemagic ⭐ (هنا تربط حسابك)
+
+1. https://codemagic.io → **Teams** (أيقونة الفريق)  
+2. **Team integrations**  
+3. **Developer Portal** → **Manage keys** → **Add key**  
+4. املأ:
+   - **Key name:** `medfleet-apple` (أي اسم — تستخدمه في yaml)  
+   - **Issuer ID** + **Key ID**  
+   - ارفع ملف **.p8**  
+5. **Save**
+
+### الخطوة 5 — شهادات التوقيع (Code signing)
+
+1. **Team settings** → **codemagic.yaml settings** → **Code signing identities**  
+2. تبويب **iOS certificates** → **Generate certificate**  
+   - Type: **Apple Distribution**  
+   - API key: اختر `medfleet-apple`  
+   - Reference name: `medfleet_dist`  
+3. تبويب **iOS provisioning profiles** → **Fetch profiles**  
+   - اختر profile لـ **`net.medfleet.rep`** (App Store)  
+   - Reference name: `medfleet_appstore`
+
+> Codemagic ينشئ الشهادة **داخل حساب Apple Developer تبعك** — مو حساب منفصل.
+
+### الخطoة 6 — فعّل الرفع التلقائي لـ TestFlight
+
+في `codemagic.yaml` workflow **ios-ipa**، أزل التعليق عن:
+
+```yaml
+integrations:
+  app_store_connect: medfleet-apple   # نفس اسم Key في Codemagic
+
+publishing:
+  app_store_connect:
+    auth: integration
+    submit_to_testflight: true
+```
+
+### الخطoة 7 — شغّل البناء
+
+1. Codemagic → **medfleet-ios** → **Start new build**  
+2. Workflow: **MedFleet — IPA (iPhone / TestFlight)**  
+3. **Start build**
+
+**النتيجة:**
+- Codemagic يبني على Mac سحابي  
+- يوقّع التطبيق بشهادات **حسابك**  
+- يرفع `.ipa` إلى **App Store Connect → TestFlight**  
+- تنزل التطبيق على iPhone من تطبيق **TestFlight**
+
+---
+
+## 5. بناء IPA للآيفون (ملخص)
+
+(انظر الخطوات 1–7 أعلاه — هذا القسم القديم مدمج فيها)
 
 ### د) البناء
 
 1. **Start new build**  
 2. Workflow: **MedFleet — IPA (iPhone / TestFlight)**  
-3. بعد النجاح → حمّل `.ipa` من Artifacts  
-4. أو فعّل `app_store_connect` في `codemagic.yaml` للرفع التلقائي لـ TestFlight
+3. بعد النجاح → `.ipa` في Artifacts + TestFlight إذا فعّلت الرفع التلقائي
 
 ---
 
