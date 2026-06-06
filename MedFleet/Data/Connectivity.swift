@@ -3,7 +3,6 @@ import Network
 
 /// Observes network reachability so screens can show an offline banner
 /// and block financial writes while disconnected.
-@MainActor
 final class Connectivity: ObservableObject {
     @Published private(set) var isOnline = true
 
@@ -13,7 +12,7 @@ final class Connectivity: ObservableObject {
     init() {
         monitor.pathUpdateHandler = { [weak self] path in
             let online = path.status == .satisfied
-            Task { @MainActor in self?.isOnline = online }
+            DispatchQueue.main.async { self?.isOnline = online }
         }
         monitor.start(queue: queue)
     }
