@@ -35,13 +35,18 @@ workflows:
       - *run_xcodegen
       - name: Build for iOS Simulator
         script: |
-          set -e
+          set -o pipefail
           xcodebuild build \
             -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
             -scheme "$XCODE_SCHEME" \
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/xcbuild.log
+          status=${PIPESTATUS[0]}
+          echo "=================== SWIFT ERRORS ==================="
+          grep -nE "error:" /tmp/xcbuild.log || echo "(no error: lines captured)"
+          echo "==================================================="
+          exit $status
     artifacts:
       - /tmp/xcodebuild_logs/*.log
     publishing:
