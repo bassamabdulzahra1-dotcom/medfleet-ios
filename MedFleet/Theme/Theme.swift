@@ -57,11 +57,12 @@ enum MFFormat {
     }
 
     static func westernDouble(_ s: String) -> Double? {
-        let map = s.map { ch -> Character in
-            switch ch {
-            case "٠"..."٩": return Character(String(Int(ch.asciiValue! - 1632)))
-            case "۰"..."۹": return Character(String(Int(ch.asciiValue! - 1776)))
-            default: return ch
+        let map = s.unicodeScalars.map { scalar -> Character in
+            let v = scalar.value
+            switch v {
+            case 0x0660...0x0669: return Character(String(v - 0x0660)) // Arabic-Indic ٠-٩
+            case 0x06F0...0x06F9: return Character(String(v - 0x06F0)) // Extended Arabic-Indic ۰-۹
+            default: return Character(scalar)
             }
         }
         return Double(String(map).replacingOccurrences(of: ",", with: ""))
