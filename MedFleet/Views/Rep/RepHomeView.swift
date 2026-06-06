@@ -3,6 +3,7 @@ import SwiftUI
 struct RepHomeView: View {
     @EnvironmentObject var tokenStore: TokenStore
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var connectivity: Connectivity
 
     @State private var appointmentCount = 0
     @State private var appointmentsTotal = 0.0
@@ -12,6 +13,10 @@ struct RepHomeView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .trailing, spacing: 10) {
+                    if !connectivity.isOnline {
+                        OfflineBanner()
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
                     VStack(spacing: 4) {
                         Text("MedFleet").font(.title2.bold()).foregroundStyle(MFColors.navy)
                         if let name = tokenStore.user?.name {
@@ -27,9 +32,6 @@ struct RepHomeView: View {
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .padding(.horizontal, 4)
 
-                    moduleCard(title: "زيارات المندوب", icon: "storefront.fill", tint: Color(red: 0, green: 0.63, blue: 0.62), bg: Color(red: 0.88, green: 0.97, blue: 0.96)) {
-                        path.append(AppRoute.pharmacies)
-                    }
                     moduleCard(title: "الموردين", icon: "building.columns.fill", tint: Color(red: 0.94, green: 0.38, blue: 0.31), bg: Color(red: 1, green: 0.92, blue: 0.91)) {
                         path.append(AppRoute.suppliers)
                     }
@@ -49,8 +51,6 @@ struct RepHomeView: View {
             .background(LinearGradient(colors: [MFColors.bgTop, MFColors.bgBottom], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
             .navigationDestination(for: AppRoute.self) { route in
                 switch route {
-                case .pharmacies: PharmaciesView()
-                case .addPharmacy: AddPharmacyView()
                 case .suppliers: SupplierPaymentsView()
                 case .settlements: SupplierSettlementsView()
                 case .appointments: AppointmentsView()
@@ -69,6 +69,10 @@ struct RepHomeView: View {
         if let r = try? await api.getReminders() {
             appointmentCount = r.count ?? r.data.count
             appointmentsTotal = r.totalAmount ?? r.data.reduce(0) { $0 + $1.amount }
+            appState.offline.save(r.data, key: OfflineKey.reminders)
+        } else if let cached = appState.offline.load([Reminder].self, key: OfflineKey.reminders) {
+            appointmentCount = cached.count
+            appointmentsTotal = cached.reduce(0) { $0 + $1.amount }
         }
     }
 

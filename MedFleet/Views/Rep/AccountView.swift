@@ -24,6 +24,7 @@ struct AccountView: View {
                         await appState.api?.logout()
                         appState.cache.invalidateSuppliers()
                         appState.cache.invalidateSettlements()
+                        appState.offline.clearAll()
                     }
                 } label: {
                     Text("تسجيل الخروج").frame(maxWidth: .infinity).padding()

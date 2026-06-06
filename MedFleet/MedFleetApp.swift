@@ -4,12 +4,14 @@ import SwiftUI
 struct MedFleetApp: App {
     @StateObject private var tokenStore = TokenStore()
     @StateObject private var appState = AppState()
+    @StateObject private var connectivity = Connectivity()
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(tokenStore)
                 .environmentObject(appState)
+                .environmentObject(connectivity)
                 .environment(\.layoutDirection, .rightToLeft)
                 .tint(MFColors.gold)
         }
@@ -24,6 +26,7 @@ final class AppState: ObservableObject {
 
     var api: APIClient?
     var cache = RepDataCache()
+    let offline = OfflineStore()
 
     func setup(tokenStore: TokenStore) {
         if api == nil { api = APIClient(tokenStore: tokenStore) }
@@ -53,8 +56,6 @@ final class RepDataCache {
 }
 
 enum AppRoute: Hashable {
-    case pharmacies
-    case addPharmacy
     case suppliers
     case settlements
     case appointments

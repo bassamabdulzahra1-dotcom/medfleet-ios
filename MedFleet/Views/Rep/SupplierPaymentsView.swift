@@ -26,6 +26,7 @@ enum PaymentCalc {
 struct SupplierPaymentsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var connectivity: Connectivity
 
     @State private var suppliers: [Supplier] = []
     @State private var query = ""
@@ -43,8 +44,10 @@ struct SupplierPaymentsView: View {
 
     var body: some View {
         OpenModuleLayout(onBack: { dismiss() }) {
-            Group {
-                if loading && suppliers.isEmpty {
+            VStack(spacing: 0) {
+                if !connectivity.isOnline { OfflineBanner() }
+                Group {
+                    if loading && suppliers.isEmpty {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let error, suppliers.isEmpty {
                     VStack(spacing: 12) {
@@ -84,6 +87,7 @@ struct SupplierPaymentsView: View {
                         .padding(.top, 56)
                     }
                 }
+                }
             }
         }
         .task { await load(force: false) }
@@ -104,13 +108,22 @@ struct SupplierPaymentsView: View {
         do {
             suppliers = try await api.listSuppliers()
             appState.cache.putSuppliers(suppliers)
+            appState.offline.save(suppliers, key: OfflineKey.suppliers)
             error = nil
-        } catch let e { if suppliers.isEmpty { self.error = e.localizedDescription } }
+        } catch let e {
+            if let cached = appState.offline.load([Supplier].self, key: OfflineKey.suppliers), !cached.isEmpty {
+                suppliers = cached
+                error = nil
+            } else if suppliers.isEmpty {
+                self.error = e.localizedDescription
+            }
+        }
         loading = false
     }
 
     private func savePlan(_ req: CreatePaymentPlanRequest) async {
         guard let api = appState.api else { return }
+        guard connectivity.isOnline else { snack = "لا يمكن إنشاء تسديد بدون إنترنت"; return }
         saving = true
         defer { saving = false }
         do {

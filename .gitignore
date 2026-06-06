@@ -6,3 +6,5 @@ build/
 MedFleet.xcodeproj/
 *.ipa
 *.dSYM.zip
+
+_removed_backup/

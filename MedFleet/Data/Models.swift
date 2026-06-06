@@ -81,7 +81,7 @@ struct CheckinRequest: Encodable {
     }
 }
 
-struct Supplier: Identifiable, Decodable {
+struct Supplier: Identifiable, Codable {
     let id: String
     let name: String
     let debtBalance: Double
@@ -102,6 +102,15 @@ struct Supplier: Identifiable, Decodable {
         debtBalance = try c.decodeFlexibleDouble(forKey: .debtBalance)
         lastPurchaseAt = try c.decodeIfPresent(String.self, forKey: .lastPurchaseAt)
         scheduledRemaining = try c.decodeFlexibleDoubleIfPresent(forKey: .scheduledRemaining)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(name, forKey: .name)
+        try c.encode(debtBalance, forKey: .debtBalance)
+        try c.encodeIfPresent(lastPurchaseAt, forKey: .lastPurchaseAt)
+        try c.encodeIfPresent(scheduledRemaining, forKey: .scheduledRemaining)
     }
 }
 
@@ -127,7 +136,7 @@ struct CreatePaymentPlanRequest: Encodable {
     }
 }
 
-struct PaymentPlan: Identifiable, Decodable {
+struct PaymentPlan: Identifiable, Codable {
     let id: String
     let supplierId: String
     let supplierName: String?
@@ -166,6 +175,21 @@ struct PaymentPlan: Identifiable, Decodable {
         installmentCount = try c.decodeIfPresent(Int.self, forKey: .installmentCount)
         paidTotal = try c.decodeFlexibleDoubleIfPresent(forKey: .paidTotal)
         createdAt = try c.decodeIfPresent(String.self, forKey: .createdAt)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(supplierId, forKey: .supplierId)
+        try c.encodeIfPresent(supplierName, forKey: .supplierName)
+        try c.encode(plannedAmount, forKey: .plannedAmount)
+        try c.encode(discountAmount, forKey: .discountAmount)
+        try c.encode(netAmount, forKey: .netAmount)
+        try c.encode(status, forKey: .status)
+        try c.encodeIfPresent(paidCount, forKey: .paidCount)
+        try c.encodeIfPresent(installmentCount, forKey: .installmentCount)
+        try c.encodeIfPresent(paidTotal, forKey: .paidTotal)
+        try c.encodeIfPresent(createdAt, forKey: .createdAt)
     }
 }
 
@@ -228,7 +252,7 @@ struct UpdateInstallmentPaymentRequest: Encodable {
     }
 }
 
-struct Reminder: Identifiable, Decodable {
+struct Reminder: Identifiable, Codable {
     let id: String
     let type: String?
     let dueDate: String
@@ -256,6 +280,18 @@ struct Reminder: Identifiable, Decodable {
         planId = try c.decodeIfPresent(String.self, forKey: .planId)
         title = try c.decodeIfPresent(String.self, forKey: .title)
         isOverdue = try c.decodeIfPresent(Bool.self, forKey: .isOverdue)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encodeIfPresent(type, forKey: .type)
+        try c.encode(dueDate, forKey: .dueDate)
+        try c.encode(amount, forKey: .amount)
+        try c.encodeIfPresent(supplierName, forKey: .supplierName)
+        try c.encodeIfPresent(planId, forKey: .planId)
+        try c.encodeIfPresent(title, forKey: .title)
+        try c.encodeIfPresent(isOverdue, forKey: .isOverdue)
     }
 }
 

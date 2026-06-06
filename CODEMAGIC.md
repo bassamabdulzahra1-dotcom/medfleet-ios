@@ -101,7 +101,7 @@ Codemagic **ما يطلب Apple ID وكلمة المرور**. الربط يتم 
 
 > Codemagic ينشئ الشهادة **داخل حساب Apple Developer تبعك** — مو حساب منفصل.
 
-### الخطoة 6 — فعّل الرفع التلقائي لـ TestFlight
+### الخطوة 6 — فعّل الرفع التلقائي لـ TestFlight
 
 في `codemagic.yaml` workflow **ios-ipa**، أزل التعليق عن:
 
@@ -115,7 +115,7 @@ publishing:
     submit_to_testflight: true
 ```
 
-### الخطoة 7 — شغّل البناء
+### الخطوة 7 — شغّل البناء
 
 1. Codemagic → **medfleet-ios** → **Start new build**  
 2. Workflow: **MedFleet — IPA (iPhone / TestFlight)**  

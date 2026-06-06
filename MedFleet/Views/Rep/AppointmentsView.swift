@@ -3,6 +3,7 @@ import SwiftUI
 struct AppointmentsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var connectivity: Connectivity
 
     @State private var items: [Reminder] = []
     @State private var totalAmount = 0.0
@@ -10,6 +11,7 @@ struct AppointmentsView: View {
     @State private var expanded = Set<String>()
     @State private var busyId: String?
     @State private var cancelTarget: Reminder?
+    @State private var snack: String?
 
     var groups: [(key: String, date: Date, items: [Reminder])] {
         let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
@@ -22,8 +24,10 @@ struct AppointmentsView: View {
 
     var body: some View {
         OpenModuleLayout(onBack: { dismiss() }) {
-            Group {
-                if loading && items.isEmpty {
+            VStack(spacing: 0) {
+                if !connectivity.isOnline { OfflineBanner() }
+                Group {
+                    if loading && items.isEmpty {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if items.isEmpty {
                     Text("لا توجد مواعيد مسجّلة").foregroundStyle(MFColors.muted).frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -61,9 +65,13 @@ struct AppointmentsView: View {
                     }
                     .listStyle(.insetGrouped)
                 }
+                }
             }
         }
         .task(id: appState.appointmentsRefresh) { await load() }
+        .overlay(alignment: .bottom) {
+            if let snack { Text(snack).padding().background(.ultraThinMaterial).clipShape(Capsule()).padding() }
+        }
         .alert("إلغاء الموعد؟", isPresented: Binding(get: { cancelTarget != nil }, set: { if !$0 { cancelTarget = nil } })) {
             Button("نعم، إلغاء", role: .destructive) {
                 if let t = cancelTarget { Task { await cancel(t) } }
@@ -82,12 +90,17 @@ struct AppointmentsView: View {
         if let r = try? await api.getReminders() {
             items = r.data
             totalAmount = r.totalAmount ?? r.data.reduce(0) { $0 + $1.amount }
+            appState.offline.save(r.data, key: OfflineKey.reminders)
+        } else if items.isEmpty, let cached = appState.offline.load([Reminder].self, key: OfflineKey.reminders) {
+            items = cached
+            totalAmount = cached.reduce(0) { $0 + $1.amount }
         }
         loading = false
     }
 
     private func cancel(_ rem: Reminder) async {
         guard let api = appState.api else { return }
+        guard connectivity.isOnline else { cancelTarget = nil; snack = "لا يمكن إلغاء الموعد بدون إنترنت"; return }
         busyId = rem.id
         let snap = items
         items.removeAll { $0.id == rem.id }
