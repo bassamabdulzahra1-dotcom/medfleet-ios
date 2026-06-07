@@ -66,6 +66,8 @@ workflows:
       app_store_connect: medfleet-apple   # ← غيّر الاسم إذا استخدمت اسماً مختلفاً في Codemagic
     environment:
       <<: *env_ios
+      groups:
+        - ios_signing
     scripts:
       - *run_xcodegen
       - name: Set up code signing (auto-create cert + profile)
