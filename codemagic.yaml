@@ -72,13 +72,12 @@ workflows:
         script: |
           set -e
           keychain initialize
-          # يولّد مفتاح خاص لشهادة التوزيع
-          PRIVATE_KEY=$(openssl genrsa 2048 2>/dev/null)
-          # ينشئ شهادة توزيع + بروفايل App Store تلقائياً ويخزنهم
+          # يستخدم مفتاح خاص ثابت مخزّن بـ Codemagic (CERTIFICATE_PRIVATE_KEY)
+          # فيعيد استخدام نفس الشهادة بدل إنشاء وحدة جديدة كل بناء
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --platform IOS \
-            --certificate-key "$PRIVATE_KEY" \
+            --certificate-key "$CERTIFICATE_PRIVATE_KEY" \
             --create
           keychain add-certificates
           xcode-project use-profiles
