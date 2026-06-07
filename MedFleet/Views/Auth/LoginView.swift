@@ -31,34 +31,54 @@ struct LoginView: View {
                     Text("المشتريات").font(.caption).foregroundStyle(.white.opacity(0.65))
                 }
 
-                VStack(spacing: 14) {
-                    TextField("البريد الإلكتروني", text: $email)
-                        .textContentType(.emailAddress)
-                        .keyboardType(.emailAddress)
-                        .autocapitalization(.none)
-                        .padding()
-                        .background(Color.white.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(MFColors.gold.opacity(0.3)))
-
-                    HStack {
-                        if showPassword {
-                            TextField("كلمة المرور", text: $password)
-                        } else {
-                            SecureField("كلمة المرور", text: $password)
-                        }
-                        Button { showPassword.toggle() } label: {
-                            Image(systemName: showPassword ? "eye.slash" : "eye")
-                                .foregroundStyle(MFColors.gold)
+                VStack(spacing: 16) {
+                    fieldShell(icon: "envelope.fill") {
+                        ZStack(alignment: .trailing) {
+                            if email.isEmpty {
+                                Text("البريد الإلكتروني")
+                                    .foregroundStyle(.white.opacity(0.45))
+                            }
+                            TextField("", text: $email)
+                                .foregroundStyle(.white)
+                                .tint(MFColors.gold)
+                                .textContentType(.emailAddress)
+                                .keyboardType(.emailAddress)
+                                .autocapitalization(.none)
+                                .disableAutocorrection(true)
                         }
                     }
-                    .padding()
-                    .background(Color.white.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(MFColors.gold.opacity(0.3)))
+
+                    fieldShell(icon: "lock.fill") {
+                        HStack(spacing: 8) {
+                            ZStack(alignment: .trailing) {
+                                if password.isEmpty {
+                                    Text("كلمة المرور")
+                                        .foregroundStyle(.white.opacity(0.45))
+                                }
+                                Group {
+                                    if showPassword {
+                                        TextField("", text: $password)
+                                    } else {
+                                        SecureField("", text: $password)
+                                    }
+                                }
+                                .foregroundStyle(.white)
+                                .tint(MFColors.gold)
+                                .textContentType(.password)
+                            }
+                            Button { showPassword.toggle() } label: {
+                                Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                                    .foregroundStyle(MFColors.gold)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
 
                     if let error {
-                        Text(error).font(.caption).foregroundStyle(MFColors.danger)
+                        Text(error)
+                            .font(.caption)
+                            .foregroundStyle(MFColors.danger)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                     }
 
                     Button {
@@ -72,12 +92,18 @@ struct LoginView: View {
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(MFColors.gold)
+                        .padding(.vertical, 15)
+                        .background(
+                            LinearGradient(colors: [MFColors.gold, MFColors.goldDark],
+                                           startPoint: .top, endPoint: .bottom)
+                        )
                         .foregroundStyle(MFColors.navy)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .shadow(color: MFColors.gold.opacity(0.35), radius: 10, y: 4)
                     }
                     .disabled(loading || email.isEmpty || password.isEmpty)
+                    .opacity((loading || email.isEmpty || password.isEmpty) ? 0.55 : 1)
+                    .padding(.top, 4)
                 }
                 .padding(.horizontal, 28)
 
@@ -86,6 +112,25 @@ struct LoginView: View {
             .foregroundStyle(.white)
         }
         .environment(\.layoutDirection, .rightToLeft)
+    }
+
+    @ViewBuilder
+    private func fieldShell<Content: View>(icon: String, @ViewBuilder content: () -> Content) -> some View {
+        HStack(spacing: 12) {
+            content()
+            Image(systemName: icon)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(MFColors.gold.opacity(0.9))
+                .frame(width: 22)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 15)
+        .background(Color.white.opacity(0.07))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(MFColors.gold.opacity(0.35), lineWidth: 1)
+        )
     }
 
     private func login() async {
