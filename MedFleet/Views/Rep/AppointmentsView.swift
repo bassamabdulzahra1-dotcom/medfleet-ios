@@ -42,7 +42,12 @@ struct AppointmentsView: View {
                             Section {
                                 if expanded.contains(g.key) {
                                     ForEach(g.items) { rem in
-                                        ReminderRow(reminder: rem, busy: busyId == rem.id, onCancel: { cancelTarget = rem })
+                                        ReminderRow(reminder: rem, busy: busyId == rem.id)
+                                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                                Button(role: .destructive) { cancelTarget = rem } label: {
+                                                    Label("إلغاء الموعد", systemImage: "calendar.badge.minus")
+                                                }
+                                            }
                                     }
                                 }
                             } header: {
@@ -120,28 +125,26 @@ struct AppointmentsView: View {
 struct ReminderRow: View {
     let reminder: Reminder
     let busy: Bool
-    let onCancel: () -> Void
 
     var body: some View {
-        HStack {
-            if busy { ProgressView() }
-            else { Button(action: onCancel) { Image(systemName: "calendar.badge.minus").foregroundStyle(MFColors.danger) } }
-            Spacer()
-            if let planId = reminder.planId {
-                NavigationLink(value: AppRoute.paymentPlan(planId)) {
-                    rowContent
-                }
-            } else {
+        if let planId = reminder.planId {
+            NavigationLink(value: AppRoute.paymentPlan(planId)) {
                 rowContent
             }
+        } else {
+            rowContent
         }
     }
 
     private var rowContent: some View {
-        VStack(alignment: .trailing) {
-            Text(reminder.supplierName ?? reminder.title ?? "موعد").font(.subheadline.weight(.semibold))
-            Text("\(MFFormat.money(reminder.amount)) د.ع").font(.caption)
-            Text(reminder.isOverdue == true ? "متأخر" : "قريب").font(.caption2).foregroundStyle(reminder.isOverdue == true ? MFColors.danger : MFColors.ok)
+        HStack {
+            if busy { ProgressView() }
+            Spacer()
+            VStack(alignment: .trailing) {
+                Text(reminder.supplierName ?? reminder.title ?? "موعد").font(.subheadline.weight(.semibold))
+                Text("\(MFFormat.money(reminder.amount)) د.ع").font(.caption)
+                Text(reminder.isOverdue == true ? "متأخر" : "قريب").font(.caption2).foregroundStyle(reminder.isOverdue == true ? MFColors.danger : MFColors.ok)
+            }
         }
     }
 }
