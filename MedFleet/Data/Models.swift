@@ -97,7 +97,7 @@ struct Supplier: Identifiable, Codable {
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decode(String.self, forKey: .id)
+        id = try c.decodeFlexibleString(forKey: .id)
         name = try c.decode(String.self, forKey: .name)
         debtBalance = try c.decodeFlexibleDouble(forKey: .debtBalance)
         lastPurchaseAt = try c.decodeIfPresent(String.self, forKey: .lastPurchaseAt)
@@ -164,8 +164,8 @@ struct PaymentPlan: Identifiable, Codable {
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decode(String.self, forKey: .id)
-        supplierId = try c.decode(String.self, forKey: .supplierId)
+        id = try c.decodeFlexibleString(forKey: .id)
+        supplierId = try c.decodeFlexibleString(forKey: .supplierId)
         supplierName = try c.decodeIfPresent(String.self, forKey: .supplierName)
         plannedAmount = try c.decodeFlexibleDouble(forKey: .plannedAmount)
         discountAmount = try c.decodeFlexibleDouble(forKey: .discountAmount)
@@ -216,7 +216,7 @@ struct PaymentInstallment: Identifiable, Decodable {
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decode(String.self, forKey: .id)
+        id = try c.decodeFlexibleString(forKey: .id)
         seqNo = try c.decode(Int.self, forKey: .seqNo)
         dueDate = try c.decode(String.self, forKey: .dueDate)
         amount = try c.decodeFlexibleDouble(forKey: .amount)
@@ -272,12 +272,12 @@ struct Reminder: Identifiable, Codable {
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decode(String.self, forKey: .id)
+        id = try c.decodeFlexibleString(forKey: .id)
         type = try c.decodeIfPresent(String.self, forKey: .type)
         dueDate = try c.decode(String.self, forKey: .dueDate)
         amount = try c.decodeFlexibleDouble(forKey: .amount)
         supplierName = try c.decodeIfPresent(String.self, forKey: .supplierName)
-        planId = try c.decodeIfPresent(String.self, forKey: .planId)
+        planId = try c.decodeFlexibleStringIfPresent(forKey: .planId)
         title = try c.decodeIfPresent(String.self, forKey: .title)
         isOverdue = try c.decodeIfPresent(Bool.self, forKey: .isOverdue)
     }
@@ -352,5 +352,21 @@ private extension KeyedDecodingContainer {
     func decodeFlexibleDoubleIfPresent(forKey key: Key) throws -> Double? {
         if (try? decodeNil(forKey: key)) == true { return nil }
         return try decodeFlexibleDouble(forKey: key)
+    }
+
+    /// Accepts the value as String, Int, or Double (backend may send numeric ids).
+    func decodeFlexibleString(forKey key: Key) throws -> String {
+        if let s = try? decode(String.self, forKey: key) { return s }
+        if let i = try? decode(Int.self, forKey: key) { return String(i) }
+        if let d = try? decode(Double.self, forKey: key) {
+            return d == d.rounded() ? String(Int(d)) : String(d)
+        }
+        return try decode(String.self, forKey: key)
+    }
+
+    func decodeFlexibleStringIfPresent(forKey key: Key) throws -> String? {
+        if (try? decodeNil(forKey: key)) == true { return nil }
+        guard contains(key) else { return nil }
+        return try? decodeFlexibleString(forKey: key)
     }
 }

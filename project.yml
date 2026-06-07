@@ -30,5 +30,3 @@ targets:
       CODE_SIGN_STYLE: Automatic
       TARGETED_DEVICE_FAMILY: "1"
       SWIFT_EMIT_LOC_STRINGS: YES
-    info:
-      path: MedFleet/Info.plist
