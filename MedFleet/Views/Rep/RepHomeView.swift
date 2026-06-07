@@ -56,7 +56,6 @@ struct RepHomeView: View {
                 case .appointments: AppointmentsView()
                 case .account: AccountView()
                 case .paymentPlan(let id): PaymentPlanDetailView(planId: id)
-                case .driverOrders: DriverOrdersView()
                 }
             }
         }

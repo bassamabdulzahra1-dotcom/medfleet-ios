@@ -120,23 +120,6 @@ final class APIClient {
         try await get("rep/reminders")
     }
 
-    // MARK: - Driver
-
-    func listOrdersToday() async throws -> [DeliveryOrder] {
-        let r: OrderList = try await get("driver/orders/today")
-        return r.data
-    }
-
-    func getOrder(id: String) async throws -> DeliveryOrder {
-        let r: OrderResponse = try await get("driver/orders/\(id)")
-        return r.data
-    }
-
-    func startOrder(id: String) async throws -> DeliveryOrder {
-        let r: OrderResponse = try await request(path: "driver/orders/\(id)/start", method: "POST", body: Optional<String>.none as String?)
-        return r.data
-    }
-
     // MARK: - HTTP core
 
     private struct EmptyResponse: Decodable {}

@@ -422,28 +422,6 @@ struct RemindersResponse: Decodable {
     }
 }
 
-struct DeliveryOrder: Identifiable, Decodable {
-    let id: String
-    let orderCode: String
-    let status: String
-    let pharmacyName: String?
-    let pharmacyAddress: String?
-    let invoiceNumber: String?
-    let customerName: String?
-
-    enum CodingKeys: String, CodingKey {
-        case id, status
-        case orderCode = "order_code"
-        case pharmacyName = "pharmacy_name"
-        case pharmacyAddress = "pharmacy_address"
-        case invoiceNumber = "invoice_number"
-        case customerName = "customer_name"
-    }
-}
-
-struct OrderList: Decodable { let data: [DeliveryOrder] }
-struct OrderResponse: Decodable { let data: DeliveryOrder }
-
 struct ScanPreviewRequest: Encodable { let qrData: String; enum CodingKeys: String, CodingKey { case qrData = "qr_data" } }
 struct ScanInvoiceRequest: Encodable {
     let qrData: String

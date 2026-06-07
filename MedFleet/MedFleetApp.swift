@@ -61,7 +61,6 @@ enum AppRoute: Hashable {
     case appointments
     case account
     case paymentPlan(String)
-    case driverOrders
 }
 
 struct RootView: View {
@@ -73,12 +72,8 @@ struct RootView: View {
         Group {
             if showSplash {
                 SplashView()
-            } else if tokenStore.isLoggedIn, let role = tokenStore.user?.role {
-                if role == "driver" {
-                    DriverOrdersView()
-                } else {
-                    RepHomeView()
-                }
+            } else if tokenStore.isLoggedIn, tokenStore.user?.role != nil {
+                RepHomeView()
             } else {
                 LoginView()
             }
