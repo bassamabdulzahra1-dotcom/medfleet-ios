@@ -28,7 +28,7 @@ struct LoginView: View {
                         .frame(width: 72, height: 72)
                         .overlay(Image(systemName: "location.fill").font(.title2).foregroundStyle(MFColors.navy))
                     Text("MedFleet").font(.title).bold().foregroundStyle(MFColors.gold)
-                    Text("متابعة المندوبين").font(.caption).foregroundStyle(.white.opacity(0.65))
+                    Text("المشتريات").font(.caption).foregroundStyle(.white.opacity(0.65))
                 }
 
                 VStack(spacing: 14) {

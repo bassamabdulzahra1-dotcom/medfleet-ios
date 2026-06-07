@@ -26,7 +26,7 @@ struct SplashView: View {
                     .foregroundStyle(MFColors.gold)
                     .tracking(4)
 
-                Text("متابعة المندوبين")
+                Text("المشتريات")
                     .font(.caption)
                     .foregroundStyle(.white.opacity(0.65))
             }
