@@ -23,6 +23,13 @@ enum PaymentCalc {
     }
 }
 
+struct PlanDraft: Identifiable {
+    let id = UUID()
+    let supplier: Supplier
+    let amount: Double?
+    let invoices: [PlanInvoice]
+}
+
 struct SupplierPaymentsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var appState: AppState
@@ -32,13 +39,11 @@ struct SupplierPaymentsView: View {
     @State private var query = ""
     @State private var loading = true
     @State private var error: String?
-    @State private var selected: Supplier?
+    @State private var planDraft: PlanDraft?
     @State private var saving = false
     @State private var snack: String?
     @State private var invoicesFor: Supplier?
-    @State private var pendingPlanSupplier: Supplier?
-    @State private var prefillAmount: Double?
-    @State private var prefillInvoices: [PlanInvoice] = []
+    @State private var pendingDraft: PlanDraft?
 
     var filtered: [Supplier] {
         let q = query.trimmingCharacters(in: .whitespaces)
@@ -79,21 +84,19 @@ struct SupplierPaymentsView: View {
             }
         }
         .task { await load(force: false) }
-        .sheet(item: $selected, onDismiss: { prefillAmount = nil; prefillInvoices = [] }) { sup in
-            CreatePlanSheet(supplier: sup, saving: saving, initialAmount: prefillAmount) { req in
-                Task { await savePlan(req) }
+        .sheet(item: $planDraft) { draft in
+            CreatePlanSheet(supplier: draft.supplier, saving: saving, initialAmount: draft.amount) { req in
+                Task { await savePlan(req, invoices: draft.invoices) }
             }
         }
         .sheet(item: $invoicesFor, onDismiss: {
-            if let s = pendingPlanSupplier {
-                pendingPlanSupplier = nil
-                DispatchQueue.main.async { selected = s }
+            if let d = pendingDraft {
+                pendingDraft = nil
+                DispatchQueue.main.async { planDraft = d }
             }
         }) { sup in
             SupplierInvoicesSheet(supplier: sup) { total, invs in
-                prefillAmount = total
-                prefillInvoices = invs
-                pendingPlanSupplier = sup
+                pendingDraft = PlanDraft(supplier: sup, amount: total, invoices: invs)
                 invoicesFor = nil
             }
         }
@@ -105,7 +108,7 @@ struct SupplierPaymentsView: View {
     @ViewBuilder
     private func supplierRow(_ s: Supplier) -> some View {
         VStack(alignment: .trailing, spacing: 6) {
-            Button { selected = s } label: {
+            Button { planDraft = PlanDraft(supplier: s, amount: nil, invoices: []) } label: {
                 VStack(alignment: .trailing, spacing: 6) {
                     Text(s.name).font(.headline).foregroundStyle(MFColors.navy)
                     HStack {
@@ -155,27 +158,25 @@ struct SupplierPaymentsView: View {
         loading = false
     }
 
-    private func savePlan(_ req: CreatePaymentPlanRequest) async {
+    private func savePlan(_ req: CreatePaymentPlanRequest, invoices: [PlanInvoice]) async {
         guard let api = appState.api else { return }
-        guard connectivity.isOnline else { snack = "لا يمكن إنشاء تسديد بدون إنترنت"; return }
+        guard connectivity.isOnline else { snack = "لا يمكن إنشاء موعد بدون إنترنت"; return }
         saving = true
         defer { saving = false }
-        let finalReq = prefillInvoices.isEmpty ? req : CreatePaymentPlanRequest(
+        let finalReq = invoices.isEmpty ? req : CreatePaymentPlanRequest(
             supplierId: req.supplierId,
             plannedAmount: req.plannedAmount,
             discountAmount: req.discountAmount,
             notes: req.notes,
             installments: req.installments,
-            invoices: prefillInvoices
+            invoices: invoices
         )
         do {
             try await api.createPaymentPlan(finalReq)
-            selected = nil
-            prefillAmount = nil
-            prefillInvoices = []
+            planDraft = nil
             appState.cache.invalidateSuppliers()
             appState.appointmentsRefresh += 1
-            snack = "تم التسديد — راجع كارت المواعيد"
+            snack = "تمت إضافة الموعد — سدِّده من كارت المواعيد"
             await load(force: true)
         } catch {
             snack = error.localizedDescription
@@ -264,7 +265,7 @@ struct CreatePlanSheet: View {
                     }
                 }
             }
-            .navigationTitle("تسديد مورد")
+            .navigationTitle("إضافة موعد تسديد")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("إلغاء") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
