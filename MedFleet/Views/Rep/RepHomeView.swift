@@ -50,13 +50,16 @@ struct RepHomeView: View {
             }
             .background(LinearGradient(colors: [MFColors.bgTop, MFColors.bgBottom], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
             .navigationDestination(for: AppRoute.self) { route in
-                switch route {
-                case .suppliers: SupplierPaymentsView()
-                case .settlements: SupplierSettlementsView()
-                case .appointments: AppointmentsView()
-                case .account: AccountView()
-                case .paymentPlan(let id): PaymentPlanDetailView(planId: id)
+                Group {
+                    switch route {
+                    case .suppliers: SupplierPaymentsView()
+                    case .settlements: SupplierSettlementsView()
+                    case .appointments: AppointmentsView()
+                    case .account: AccountView()
+                    case .paymentPlan(let id): PaymentPlanDetailView(planId: id)
+                    }
                 }
+                .toolbar(.hidden, for: .navigationBar)
             }
         }
         .environment(\.layoutDirection, .rightToLeft)

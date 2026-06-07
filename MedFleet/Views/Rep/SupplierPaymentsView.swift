@@ -391,6 +391,12 @@ struct SupplierInvoicesSheet: View {
                         .font(.caption)
                         .foregroundStyle(inv.paymentState == "partial" ? MFColors.gold : MFColors.danger)
                 }
+                if let ref = inv.ref, !ref.isEmpty {
+                    HStack {
+                        Text("الرقم المرجعي: \(ref)").font(.caption.weight(.semibold)).foregroundStyle(MFColors.gold)
+                        Spacer()
+                    }
+                }
                 HStack {
                     Text("التاريخ: \(inv.invoiceDate ?? "—")").font(.caption).foregroundStyle(MFColors.muted)
                     Spacer()

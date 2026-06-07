@@ -119,6 +119,7 @@ struct SupplierList: Decodable { let data: [Supplier] }
 struct SupplierInvoice: Identifiable, Decodable {
     let id: String
     let name: String?
+    let ref: String?
     let invoiceDate: String?
     let invoiceDateDue: String?
     let amountTotal: Double
@@ -127,7 +128,7 @@ struct SupplierInvoice: Identifiable, Decodable {
     let currency: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, name, currency
+        case id, name, ref, currency
         case invoiceDate = "invoice_date"
         case invoiceDateDue = "invoice_date_due"
         case amountTotal = "amount_total"
@@ -139,6 +140,7 @@ struct SupplierInvoice: Identifiable, Decodable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decodeFlexibleString(forKey: .id)
         name = try c.decodeIfPresent(String.self, forKey: .name)
+        ref = try c.decodeFlexibleStringIfPresent(forKey: .ref)
         invoiceDate = try c.decodeIfPresent(String.self, forKey: .invoiceDate)
         invoiceDateDue = try c.decodeIfPresent(String.self, forKey: .invoiceDateDue)
         amountTotal = try c.decodeFlexibleDouble(forKey: .amountTotal)
