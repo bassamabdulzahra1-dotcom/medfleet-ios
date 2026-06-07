@@ -120,6 +120,11 @@ final class APIClient {
         try await get("rep/reminders")
     }
 
+    func getSettlements() async throws -> SettlementsSummary {
+        let r: SettlementsResponse = try await get("rep/settlements")
+        return r.data
+    }
+
     // MARK: - HTTP core
 
     private struct EmptyResponse: Decodable {}

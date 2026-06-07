@@ -422,6 +422,119 @@ struct RemindersResponse: Decodable {
     }
 }
 
+// MARK: - Supplier settlements (payments ledger)
+
+struct Settlement: Identifiable, Decodable {
+    let id: String
+    let amount: Double
+    let settledAt: String
+    let supplierId: String
+    let supplierName: String?
+    let day: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, amount, day
+        case settledAt = "settled_at"
+        case supplierId = "supplier_id"
+        case supplierName = "supplier_name"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeFlexibleString(forKey: .id)
+        amount = try c.decodeFlexibleDouble(forKey: .amount)
+        settledAt = try c.decode(String.self, forKey: .settledAt)
+        supplierId = try c.decodeFlexibleString(forKey: .supplierId)
+        supplierName = try c.decodeIfPresent(String.self, forKey: .supplierName)
+        day = try c.decodeIfPresent(String.self, forKey: .day)
+    }
+}
+
+struct SettlementDaily: Identifiable, Decodable {
+    var id: String { day }
+    let day: String
+    let count: Int
+    let total: Double
+
+    enum CodingKeys: String, CodingKey { case day, count, total }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        day = try c.decode(String.self, forKey: .day)
+        count = try c.decode(Int.self, forKey: .count)
+        total = try c.decodeFlexibleDouble(forKey: .total)
+    }
+}
+
+struct SettlementMonthly: Identifiable, Decodable {
+    var id: String { month }
+    let month: String
+    let count: Int
+    let total: Double
+
+    enum CodingKeys: String, CodingKey { case month, count, total }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        month = try c.decode(String.self, forKey: .month)
+        count = try c.decode(Int.self, forKey: .count)
+        total = try c.decodeFlexibleDouble(forKey: .total)
+    }
+}
+
+struct SettlementBySupplier: Identifiable, Decodable {
+    var id: String { supplierId }
+    let supplierId: String
+    let supplierName: String?
+    let count: Int
+    let total: Double
+    let lastSettledAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case count, total
+        case supplierId = "supplier_id"
+        case supplierName = "supplier_name"
+        case lastSettledAt = "last_settled_at"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        supplierId = try c.decodeFlexibleString(forKey: .supplierId)
+        supplierName = try c.decodeIfPresent(String.self, forKey: .supplierName)
+        count = try c.decode(Int.self, forKey: .count)
+        total = try c.decodeFlexibleDouble(forKey: .total)
+        lastSettledAt = try c.decodeIfPresent(String.self, forKey: .lastSettledAt)
+    }
+}
+
+struct SettlementsSummary: Decodable {
+    let transactions: [Settlement]
+    let daily: [SettlementDaily]
+    let monthly: [SettlementMonthly]
+    let bySupplier: [SettlementBySupplier]
+    let grandTotal: Double
+    let grandCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case transactions, daily, monthly
+        case bySupplier = "by_supplier"
+        case grandTotal = "grand_total"
+        case grandCount = "grand_count"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        transactions = try c.decode([Settlement].self, forKey: .transactions)
+        daily = try c.decode([SettlementDaily].self, forKey: .daily)
+        monthly = try c.decode([SettlementMonthly].self, forKey: .monthly)
+        bySupplier = try c.decode([SettlementBySupplier].self, forKey: .bySupplier)
+        grandTotal = try c.decodeFlexibleDouble(forKey: .grandTotal)
+        grandCount = try c.decode(Int.self, forKey: .grandCount)
+    }
+}
+
+struct SettlementsResponse: Decodable { let data: SettlementsSummary }
+
 struct ScanPreviewRequest: Encodable { let qrData: String; enum CodingKeys: String, CodingKey { case qrData = "qr_data" } }
 struct ScanInvoiceRequest: Encodable {
     let qrData: String
