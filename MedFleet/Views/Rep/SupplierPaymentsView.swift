@@ -87,7 +87,7 @@ struct SupplierPaymentsView: View {
         .sheet(item: $invoicesFor, onDismiss: {
             if let s = pendingPlanSupplier {
                 pendingPlanSupplier = nil
-                selected = s
+                DispatchQueue.main.async { selected = s }
             }
         }) { sup in
             SupplierInvoicesSheet(supplier: sup) { total, invs in
@@ -217,15 +217,52 @@ struct CreatePlanSheet: View {
                             .foregroundStyle(MFColors.navy)
                     }
                 }
-                TextField("مبلغ التسديد", text: $amount).keyboardType(.decimalPad)
-                TextField("خصم (%)", text: $discountPct).keyboardType(.decimalPad)
-                if let planned = MFFormat.westernDouble(amount), let pct = MFFormat.westernDouble(discountPct), pct > 0 {
-                    let disc = (planned * pct / 100 * 100).rounded() / 100
-                    Text("يعادل \(MFFormat.money(disc)) د.ع — الصافي \(MFFormat.money(planned - disc)) د.ع").font(.caption)
+
+                Section("المبلغ") {
+                    HStack {
+                        Text("مبلغ التسديد").foregroundStyle(MFColors.muted)
+                        Spacer()
+                        TextField("0", text: $amount)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: 170)
+                    }
+                    HStack {
+                        Text("نسبة الخصم %").foregroundStyle(MFColors.muted)
+                        Spacer()
+                        TextField("0", text: $discountPct)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: 90)
+                    }
+                    if let planned = MFFormat.westernDouble(amount), let pct = MFFormat.westernDouble(discountPct), pct > 0 {
+                        let disc = (planned * pct / 100 * 100).rounded() / 100
+                        Text("الخصم \(MFFormat.money(disc)) د.ع — الصافي \(MFFormat.money(planned - disc)) د.ع")
+                            .font(.caption).foregroundStyle(MFColors.gold)
+                    }
                 }
-                TextField("عدد الأقساط", text: $count).keyboardType(.numberPad)
-                DatePicker("أول استحقاق", selection: $firstDue, in: Date()..., displayedComponents: .date)
-                TextField("أيام بين الأقساط", text: $intervalDays).keyboardType(.numberPad)
+
+                Section("الأقساط (الافتراضي: تسديدة واحدة)") {
+                    Stepper(value: Binding(
+                        get: { min(max(Int(count) ?? 1, 1), 24) },
+                        set: { count = String($0) }
+                    ), in: 1...24) {
+                        Text("عدد الأقساط: \(min(max(Int(count) ?? 1, 1), 24))")
+                    }
+                    if (Int(count) ?? 1) > 1 {
+                        DatePicker("أول استحقاق", selection: $firstDue, in: Date()..., displayedComponents: .date)
+                        HStack {
+                            Text("أيام بين الأقساط").foregroundStyle(MFColors.muted)
+                            Spacer()
+                            TextField("30", text: $intervalDays)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: 80)
+                        }
+                    } else {
+                        DatePicker("تاريخ الاستحقاق", selection: $firstDue, in: Date()..., displayedComponents: .date)
+                    }
+                }
             }
             .navigationTitle("تسديد مورد")
             .toolbar {
