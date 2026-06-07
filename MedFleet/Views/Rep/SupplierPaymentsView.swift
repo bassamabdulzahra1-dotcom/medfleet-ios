@@ -309,6 +309,9 @@ struct SupplierInvoicesSheet: View {
                         }
                     }
                     .listStyle(.insetGrouped)
+                    .navigationDestination(for: SupplierInvoice.self) { inv in
+                        InvoiceLinesView(invoice: inv)
+                    }
                 }
             }
             .navigationTitle("الفواتير غير المسددة")
@@ -333,30 +336,41 @@ struct SupplierInvoicesSheet: View {
     @ViewBuilder
     private func invoiceRow(_ inv: SupplierInvoice) -> some View {
         let isOn = selectedIds.contains(inv.id)
-        Button {
-            if isOn { selectedIds.remove(inv.id) } else { selectedIds.insert(inv.id) }
-        } label: {
-            HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: 10) {
+            Button {
+                if isOn { selectedIds.remove(inv.id) } else { selectedIds.insert(inv.id) }
+            } label: {
                 Image(systemName: isOn ? "checkmark.square.fill" : "square")
                     .foregroundStyle(isOn ? MFColors.gold : MFColors.muted)
-                VStack(alignment: .trailing, spacing: 4) {
-                    HStack {
-                        Text(inv.name ?? "—").font(.subheadline.weight(.semibold)).foregroundStyle(MFColors.navy)
-                        Spacer()
-                        Text(inv.paymentState == "partial" ? "مدفوعة جزئياً" : "غير مسددة")
-                            .font(.caption)
-                            .foregroundStyle(inv.paymentState == "partial" ? MFColors.gold : MFColors.danger)
-                    }
-                    HStack {
-                        Text("التاريخ: \(inv.invoiceDate ?? "—")").font(.caption).foregroundStyle(MFColors.muted)
-                        Spacer()
-                        Text("المتبقّي: \(MFFormat.money(inv.amountResidual)) د.ع")
-                            .font(.caption.weight(.semibold)).foregroundStyle(MFColors.navy)
-                    }
+            }
+            .buttonStyle(.borderless)
+
+            VStack(alignment: .trailing, spacing: 6) {
+                HStack {
+                    Text(inv.name ?? "—").font(.subheadline.weight(.semibold)).foregroundStyle(MFColors.navy)
+                    Spacer()
+                    Text(inv.paymentState == "partial" ? "مدفوعة جزئياً" : "غير مسددة")
+                        .font(.caption)
+                        .foregroundStyle(inv.paymentState == "partial" ? MFColors.gold : MFColors.danger)
                 }
+                HStack {
+                    Text("التاريخ: \(inv.invoiceDate ?? "—")").font(.caption).foregroundStyle(MFColors.muted)
+                    Spacer()
+                    Text("المتبقّي: \(MFFormat.money(inv.amountResidual)) د.ع")
+                        .font(.caption.weight(.semibold)).foregroundStyle(MFColors.navy)
+                }
+                NavigationLink(value: inv) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "shippingbox")
+                        Text("عرض المواد والمخزون")
+                        Image(systemName: "chevron.left")
+                    }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(MFColors.gold)
+                }
+                .buttonStyle(.borderless)
             }
         }
-        .buttonStyle(.plain)
     }
 
     private func load() async {
@@ -378,4 +392,112 @@ struct SupplierInvoicesSheet: View {
 extension Supplier: Hashable {
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
     static func == (l: Supplier, r: Supplier) -> Bool { l.id == r.id }
+}
+
+extension SupplierInvoice: Hashable {
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+    static func == (l: SupplierInvoice, r: SupplierInvoice) -> Bool { l.id == r.id }
+}
+
+struct InvoiceLinesView: View {
+    @EnvironmentObject var appState: AppState
+    let invoice: SupplierInvoice
+
+    @State private var loading = true
+    @State private var error: String?
+    @State private var lines: [SupplierInvoiceLine] = []
+
+    var body: some View {
+        Group {
+            if loading {
+                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if let error {
+                Text(error).foregroundStyle(MFColors.danger).multilineTextAlignment(.center)
+                    .padding().frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if lines.isEmpty {
+                Text("لا توجد مواد في هذه الفاتورة")
+                    .foregroundStyle(MFColors.muted).padding()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List {
+                    Section {
+                        ForEach(lines) { line in
+                            lineRow(line)
+                        }
+                    } header: {
+                        Text("\(lines.count) مادة — الكمية بالفاتورة مقابل المخزون الحالي")
+                            .font(.caption).foregroundStyle(MFColors.muted)
+                    }
+                }
+                .listStyle(.insetGrouped)
+            }
+        }
+        .navigationTitle(invoice.name ?? "مواد الفاتورة")
+        .navigationBarTitleDisplayMode(.inline)
+        .environment(\.layoutDirection, .rightToLeft)
+        .task { await load() }
+    }
+
+    @ViewBuilder
+    private func lineRow(_ line: SupplierInvoiceLine) -> some View {
+        VStack(alignment: .trailing, spacing: 6) {
+            Text(line.name ?? "—")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(MFColors.navy)
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            if let code = line.defaultCode, !code.isEmpty {
+                Text(code).font(.caption2).foregroundStyle(MFColors.muted)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+            HStack(spacing: 8) {
+                qtyChip(title: "الكمية بالفاتورة",
+                        value: MFFormat.money(line.quantity),
+                        color: MFColors.navy)
+                qtyChip(title: "المخزون الحالي",
+                        value: line.stockQty != nil ? MFFormat.money(line.stockQty!) : "—",
+                        color: stockColor(line))
+            }
+            HStack {
+                Text("سعر الوحدة: \(MFFormat.money(line.priceUnit)) د.ع")
+                    .font(.caption2).foregroundStyle(MFColors.muted)
+                Spacer()
+                Text("الإجمالي: \(MFFormat.money(line.priceSubtotal)) د.ع")
+                    .font(.caption.weight(.semibold)).foregroundStyle(MFColors.navy)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private func qtyChip(title: String, value: String, color: Color) -> some View {
+        VStack(spacing: 2) {
+            Text(title).font(.caption2).foregroundStyle(MFColors.muted)
+            Text(value).font(.subheadline.weight(.bold)).foregroundStyle(color)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(color.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func stockColor(_ line: SupplierInvoiceLine) -> Color {
+        guard let stock = line.stockQty else { return MFColors.muted }
+        if stock <= 0 { return MFColors.danger }
+        if stock < line.quantity { return MFColors.gold }
+        return MFColors.navy
+    }
+
+    private func load() async {
+        guard let api = appState.api else { loading = false; return }
+        loading = true
+        error = nil
+        do {
+            let r = try await api.getInvoiceLines(invoiceId: invoice.id)
+            lines = r.data
+        } catch {
+            self.error = error.localizedDescription
+        }
+        loading = false
+    }
 }

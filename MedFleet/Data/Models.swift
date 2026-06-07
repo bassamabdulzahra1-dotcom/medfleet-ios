@@ -167,6 +167,59 @@ struct SupplierInvoicesResponse: Decodable {
     }
 }
 
+struct SupplierInvoiceLine: Identifiable, Decodable {
+    let id: String
+    let productId: String?
+    let name: String?
+    let defaultCode: String?
+    let quantity: Double
+    let priceUnit: Double
+    let priceSubtotal: Double
+    let uom: String?
+    let stockQty: Double?
+    let freeQty: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, quantity, uom
+        case productId = "product_id"
+        case defaultCode = "default_code"
+        case priceUnit = "price_unit"
+        case priceSubtotal = "price_subtotal"
+        case stockQty = "stock_qty"
+        case freeQty = "free_qty"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeFlexibleString(forKey: .id)
+        productId = try c.decodeFlexibleStringIfPresent(forKey: .productId)
+        name = try c.decodeIfPresent(String.self, forKey: .name)
+        defaultCode = try c.decodeIfPresent(String.self, forKey: .defaultCode)
+        quantity = try c.decodeFlexibleDouble(forKey: .quantity)
+        priceUnit = try c.decodeFlexibleDouble(forKey: .priceUnit)
+        priceSubtotal = try c.decodeFlexibleDouble(forKey: .priceSubtotal)
+        uom = try c.decodeIfPresent(String.self, forKey: .uom)
+        stockQty = try c.decodeFlexibleDoubleIfPresent(forKey: .stockQty)
+        freeQty = try c.decodeFlexibleDoubleIfPresent(forKey: .freeQty)
+    }
+}
+
+struct InvoiceLinesResponse: Decodable {
+    let data: [SupplierInvoiceLine]
+    let invoiceName: String?
+
+    enum CodingKeys: String, CodingKey {
+        case data
+        case invoiceName = "invoice_name"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        data = try c.decodeIfPresent([SupplierInvoiceLine].self, forKey: .data) ?? []
+        invoiceName = try c.decodeIfPresent(String.self, forKey: .invoiceName)
+    }
+}
+
 struct PlanInvoice: Encodable {
     let id: Int
     let name: String?
