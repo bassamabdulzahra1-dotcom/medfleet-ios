@@ -35,6 +35,10 @@ struct SupplierPaymentsView: View {
     @State private var selected: Supplier?
     @State private var saving = false
     @State private var snack: String?
+    @State private var invoicesFor: Supplier?
+    @State private var pendingPlanSupplier: Supplier?
+    @State private var prefillAmount: Double?
+    @State private var prefillInvoices: [PlanInvoice] = []
 
     var filtered: [Supplier] {
         let q = query.trimmingCharacters(in: .whitespaces)
@@ -46,6 +50,15 @@ struct SupplierPaymentsView: View {
         OpenModuleLayout(onBack: { dismiss() }) {
             VStack(spacing: 0) {
                 if !connectivity.isOnline { OfflineBanner() }
+                HStack {
+                    Text("الموردين").font(.title2.bold()).foregroundStyle(MFColors.navy)
+                    Spacer()
+                    Button("تحديث") { Task { await load(force: true) } }.foregroundStyle(MFColors.gold)
+                }
+                .padding(.horizontal)
+                .padding(.top, 60)
+                .padding(.bottom, 4)
+
                 Group {
                     if loading && suppliers.isEmpty {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -57,47 +70,68 @@ struct SupplierPaymentsView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List(filtered) { s in
-                        Button { selected = s } label: {
-                            VStack(alignment: .trailing, spacing: 6) {
-                                Text(s.name).font(.headline).foregroundStyle(MFColors.navy)
-                                HStack {
-                                    Text("الدين: \(MFFormat.money(s.debtBalance)) د.ع").font(.caption).foregroundStyle(MFColors.muted)
-                                    Spacer()
-                                    if let d = s.lastPurchaseAt {
-                                        Text("آخر شراء: \(MFFormat.dueDate(d))")
-                                            .font(.caption2)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 4)
-                                            .background(MFColors.gold.opacity(0.15))
-                                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    }
-                                }
-                            }
-                        }
+                        supplierRow(s)
                     }
                     .listStyle(.plain)
                     .searchable(text: $query, prompt: "بحث باسم المورد")
-                    .overlay(alignment: .top) {
-                        HStack {
-                            Text("الموردين").font(.title2.bold())
-                            Spacer()
-                            Button("تحديث") { Task { await load(force: true) } }.foregroundStyle(MFColors.gold)
-                        }
-                        .padding(.horizontal)
-                        .padding(.top, 56)
-                    }
                 }
                 }
             }
         }
         .task { await load(force: false) }
-        .sheet(item: $selected) { sup in
-            CreatePlanSheet(supplier: sup, saving: saving) { req in
+        .sheet(item: $selected, onDismiss: { prefillAmount = nil; prefillInvoices = [] }) { sup in
+            CreatePlanSheet(supplier: sup, saving: saving, initialAmount: prefillAmount) { req in
                 Task { await savePlan(req) }
+            }
+        }
+        .sheet(item: $invoicesFor, onDismiss: {
+            if let s = pendingPlanSupplier {
+                pendingPlanSupplier = nil
+                selected = s
+            }
+        }) { sup in
+            SupplierInvoicesSheet(supplier: sup) { total, invs in
+                prefillAmount = total
+                prefillInvoices = invs
+                pendingPlanSupplier = sup
+                invoicesFor = nil
             }
         }
         .overlay(alignment: .bottom) {
             if let snack { Text(snack).padding().background(.ultraThinMaterial).clipShape(Capsule()).padding() }
+        }
+    }
+
+    @ViewBuilder
+    private func supplierRow(_ s: Supplier) -> some View {
+        VStack(alignment: .trailing, spacing: 6) {
+            Button { selected = s } label: {
+                VStack(alignment: .trailing, spacing: 6) {
+                    Text(s.name).font(.headline).foregroundStyle(MFColors.navy)
+                    HStack {
+                        Text("الدين: \(MFFormat.money(s.debtBalance)) د.ع").font(.caption).foregroundStyle(MFColors.muted)
+                        Spacer()
+                        if let d = s.lastPurchaseAt {
+                            Text("آخر شراء: \(MFFormat.dueDate(d))")
+                                .font(.caption2)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(MFColors.gold.opacity(0.15))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            Button { invoicesFor = s } label: {
+                Text("عرض الفواتير غير المسددة")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(MFColors.gold)
+            }
+            .buttonStyle(.borderless)
         }
     }
 
@@ -126,9 +160,19 @@ struct SupplierPaymentsView: View {
         guard connectivity.isOnline else { snack = "لا يمكن إنشاء تسديد بدون إنترنت"; return }
         saving = true
         defer { saving = false }
+        let finalReq = prefillInvoices.isEmpty ? req : CreatePaymentPlanRequest(
+            supplierId: req.supplierId,
+            plannedAmount: req.plannedAmount,
+            discountAmount: req.discountAmount,
+            notes: req.notes,
+            installments: req.installments,
+            invoices: prefillInvoices
+        )
         do {
-            try await api.createPaymentPlan(req)
+            try await api.createPaymentPlan(finalReq)
             selected = nil
+            prefillAmount = nil
+            prefillInvoices = []
             appState.cache.invalidateSuppliers()
             appState.appointmentsRefresh += 1
             snack = "تم التسديد — راجع كارت المواعيد"
@@ -142,6 +186,7 @@ struct SupplierPaymentsView: View {
 struct CreatePlanSheet: View {
     let supplier: Supplier
     let saving: Bool
+    let initialAmount: Double?
     let onSave: (CreatePaymentPlanRequest) -> Void
     @Environment(\.dismiss) private var dismiss
 
@@ -151,11 +196,13 @@ struct CreatePlanSheet: View {
     @State private var firstDue = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
     @State private var intervalDays = "30"
 
-    init(supplier: Supplier, saving: Bool, onSave: @escaping (CreatePaymentPlanRequest) -> Void) {
+    init(supplier: Supplier, saving: Bool, initialAmount: Double? = nil, onSave: @escaping (CreatePaymentPlanRequest) -> Void) {
         self.supplier = supplier
         self.saving = saving
+        self.initialAmount = initialAmount
         self.onSave = onSave
-        _amount = State(initialValue: supplier.debtBalance > 0 ? String(format: "%.0f", supplier.debtBalance) : "")
+        let base = initialAmount ?? (supplier.debtBalance > 0 ? supplier.debtBalance : 0)
+        _amount = State(initialValue: base > 0 ? String(format: "%.0f", base) : "")
     }
 
     var body: some View {
@@ -164,6 +211,11 @@ struct CreatePlanSheet: View {
                 Section {
                     Text(supplier.name).fontWeight(.semibold)
                     Text("الدين: \(MFFormat.money(supplier.debtBalance)) د.ع").font(.caption).foregroundStyle(MFColors.muted)
+                    if let initialAmount, initialAmount > 0 {
+                        Text("مبلغ الفواتير المحددة: \(MFFormat.money(initialAmount)) د.ع")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(MFColors.navy)
+                    }
                 }
                 TextField("مبلغ التسديد", text: $amount).keyboardType(.decimalPad)
                 TextField("خصم (%)", text: $discountPct).keyboardType(.decimalPad)
@@ -203,7 +255,123 @@ struct CreatePlanSheet: View {
             let date = Calendar.current.date(byAdding: .day, value: gap * i, to: firstDue) ?? firstDue
             inst.append(InstallmentInput(dueDate: fmt.string(from: date), amount: amt))
         }
-        onSave(CreatePaymentPlanRequest(supplierId: supplier.id, plannedAmount: planned, discountAmount: disc, notes: nil, installments: inst))
+        onSave(CreatePaymentPlanRequest(supplierId: supplier.id, plannedAmount: planned, discountAmount: disc, notes: nil, installments: inst, invoices: nil))
+    }
+}
+
+struct SupplierInvoicesSheet: View {
+    @EnvironmentObject var appState: AppState
+    let supplier: Supplier
+    let onPay: (Double, [PlanInvoice]) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var loading = true
+    @State private var error: String?
+    @State private var invoices: [SupplierInvoice] = []
+    @State private var totalResidual = 0.0
+    @State private var noOdooRef = false
+    @State private var selectedIds: Set<String> = []
+
+    private var selectedTotal: Double {
+        invoices.filter { selectedIds.contains($0.id) }.reduce(0) { $0 + $1.amountResidual }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if loading {
+                    ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let error {
+                    Text(error).foregroundStyle(MFColors.danger).padding().frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if noOdooRef {
+                    Text("هذا المورد غير مربوط بـ Odoo — اطلب من الأدمن المزامنة.")
+                        .foregroundStyle(MFColors.muted).multilineTextAlignment(.center).padding()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if invoices.isEmpty {
+                    Text("لا توجد فواتير غير مسددة 🎉")
+                        .foregroundStyle(MFColors.navy).padding()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    List {
+                        Section {
+                            ForEach(invoices) { inv in
+                                invoiceRow(inv)
+                            }
+                        } header: {
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text("إجمالي المتبقّي: \(MFFormat.money(totalResidual)) د.ع — \(invoices.count) فاتورة")
+                                Text("اختر الفواتير التي تريد تسديدها داخل التطبيق")
+                            }
+                            .font(.caption).foregroundStyle(MFColors.muted)
+                        } footer: {
+                            Text("ملاحظة: التسديد يُسجَّل داخل التطبيق فقط ولا ينعكس على أودو.")
+                                .font(.caption2).foregroundStyle(MFColors.muted)
+                        }
+                    }
+                    .listStyle(.insetGrouped)
+                }
+            }
+            .navigationTitle("الفواتير غير المسددة")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("إغلاق") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(selectedIds.isEmpty ? "تسديد المحدد" : "تسديد المحدد (\(MFFormat.money(selectedTotal)))") {
+                        let sel = invoices.filter { selectedIds.contains($0.id) }
+                        onPay(selectedTotal, sel.map {
+                            PlanInvoice(id: Int($0.id) ?? 0, name: $0.name, invoiceDate: $0.invoiceDate, amountResidual: $0.amountResidual)
+                        })
+                    }
+                    .disabled(selectedIds.isEmpty || selectedTotal <= 0)
+                }
+            }
+        }
+        .environment(\.layoutDirection, .rightToLeft)
+        .task { await load() }
+    }
+
+    @ViewBuilder
+    private func invoiceRow(_ inv: SupplierInvoice) -> some View {
+        let isOn = selectedIds.contains(inv.id)
+        Button {
+            if isOn { selectedIds.remove(inv.id) } else { selectedIds.insert(inv.id) }
+        } label: {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: isOn ? "checkmark.square.fill" : "square")
+                    .foregroundStyle(isOn ? MFColors.gold : MFColors.muted)
+                VStack(alignment: .trailing, spacing: 4) {
+                    HStack {
+                        Text(inv.name ?? "—").font(.subheadline.weight(.semibold)).foregroundStyle(MFColors.navy)
+                        Spacer()
+                        Text(inv.paymentState == "partial" ? "مدفوعة جزئياً" : "غير مسددة")
+                            .font(.caption)
+                            .foregroundStyle(inv.paymentState == "partial" ? MFColors.gold : MFColors.danger)
+                    }
+                    HStack {
+                        Text("التاريخ: \(inv.invoiceDate ?? "—")").font(.caption).foregroundStyle(MFColors.muted)
+                        Spacer()
+                        Text("المتبقّي: \(MFFormat.money(inv.amountResidual)) د.ع")
+                            .font(.caption.weight(.semibold)).foregroundStyle(MFColors.navy)
+                    }
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func load() async {
+        guard let api = appState.api else { loading = false; return }
+        loading = true
+        error = nil
+        do {
+            let r = try await api.getSupplierInvoices(supplierId: supplier.id)
+            invoices = r.data
+            totalResidual = r.totalResidual
+            noOdooRef = r.noOdooRef
+        } catch {
+            self.error = error.localizedDescription
+        }
+        loading = false
     }
 }
 

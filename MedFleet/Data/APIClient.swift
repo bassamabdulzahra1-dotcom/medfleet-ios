@@ -72,6 +72,10 @@ final class APIClient {
         return r.data
     }
 
+    func getSupplierInvoices(supplierId: String) async throws -> SupplierInvoicesResponse {
+        try await get("rep/suppliers/\(supplierId)/invoices")
+    }
+
     func listPaymentPlans(paidOnly: Bool = false) async throws -> [PaymentPlan] {
         var path = "rep/supplier-payment-plans"
         if paidOnly { path += "?paid_only=1" }

@@ -116,6 +116,69 @@ struct Supplier: Identifiable, Codable {
 
 struct SupplierList: Decodable { let data: [Supplier] }
 
+struct SupplierInvoice: Identifiable, Decodable {
+    let id: String
+    let name: String?
+    let invoiceDate: String?
+    let invoiceDateDue: String?
+    let amountTotal: Double
+    let amountResidual: Double
+    let paymentState: String?
+    let currency: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, currency
+        case invoiceDate = "invoice_date"
+        case invoiceDateDue = "invoice_date_due"
+        case amountTotal = "amount_total"
+        case amountResidual = "amount_residual"
+        case paymentState = "payment_state"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeFlexibleString(forKey: .id)
+        name = try c.decodeIfPresent(String.self, forKey: .name)
+        invoiceDate = try c.decodeIfPresent(String.self, forKey: .invoiceDate)
+        invoiceDateDue = try c.decodeIfPresent(String.self, forKey: .invoiceDateDue)
+        amountTotal = try c.decodeFlexibleDouble(forKey: .amountTotal)
+        amountResidual = try c.decodeFlexibleDouble(forKey: .amountResidual)
+        paymentState = try c.decodeIfPresent(String.self, forKey: .paymentState)
+        currency = try c.decodeIfPresent(String.self, forKey: .currency)
+    }
+}
+
+struct SupplierInvoicesResponse: Decodable {
+    let data: [SupplierInvoice]
+    let totalResidual: Double
+    let noOdooRef: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case data
+        case totalResidual = "total_residual"
+        case noOdooRef = "no_odoo_ref"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        data = try c.decodeIfPresent([SupplierInvoice].self, forKey: .data) ?? []
+        totalResidual = try c.decodeFlexibleDoubleIfPresent(forKey: .totalResidual) ?? 0
+        noOdooRef = (try? c.decode(Bool.self, forKey: .noOdooRef)) ?? false
+    }
+}
+
+struct PlanInvoice: Encodable {
+    let id: Int
+    let name: String?
+    let invoiceDate: String?
+    let amountResidual: Double
+    enum CodingKeys: String, CodingKey {
+        case id, name
+        case invoiceDate = "invoice_date"
+        case amountResidual = "amount_residual"
+    }
+}
+
 struct InstallmentInput: Encodable {
     let dueDate: String
     let amount: Double
@@ -128,8 +191,9 @@ struct CreatePaymentPlanRequest: Encodable {
     let discountAmount: Double
     let notes: String?
     let installments: [InstallmentInput]
+    let invoices: [PlanInvoice]?
     enum CodingKeys: String, CodingKey {
-        case notes, installments
+        case notes, installments, invoices
         case supplierId = "supplier_id"
         case plannedAmount = "planned_amount"
         case discountAmount = "discount_amount"
