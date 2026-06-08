@@ -312,7 +312,7 @@ struct CreatePlanSheet: View {
         let each = (net / Double(n) * 100).rounded() / 100
         var rem = net
         var inst: [InstallmentInput] = []
-        let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
+        let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"; fmt.locale = Locale(identifier: "en_US_POSIX")
         for i in 0..<n {
             let amt = i == n - 1 ? ((rem * 100).rounded() / 100) : each
             rem -= amt
