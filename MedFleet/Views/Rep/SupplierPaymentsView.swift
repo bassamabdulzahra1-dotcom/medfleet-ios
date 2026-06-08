@@ -64,6 +64,27 @@ struct SupplierPaymentsView: View {
                 .padding(.top, 60)
                 .padding(.bottom, 4)
 
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(MFColors.muted)
+                    TextField("بحث باسم المورد", text: $query)
+                        .foregroundStyle(MFColors.navy)
+                        .tint(MFColors.gold)
+                        .autocorrectionDisabled(true)
+                        .textInputAutocapitalization(.never)
+                    if !query.isEmpty {
+                        Button { query = "" } label: {
+                            Image(systemName: "xmark.circle.fill").foregroundStyle(MFColors.muted)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(MFColors.navy.opacity(0.06))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal)
+                .padding(.bottom, 6)
+
                 Group {
                     if loading && suppliers.isEmpty {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -73,12 +94,17 @@ struct SupplierPaymentsView: View {
                         Button("إعادة المحاولة") { Task { await load(force: true) } }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if filtered.isEmpty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "magnifyingglass").font(.title).foregroundStyle(MFColors.muted)
+                        Text("لا يوجد مورد مطابق").foregroundStyle(MFColors.muted)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List(filtered) { s in
                         supplierRow(s)
                     }
                     .listStyle(.plain)
-                    .searchable(text: $query, prompt: "بحث باسم المورد")
                 }
                 }
             }
