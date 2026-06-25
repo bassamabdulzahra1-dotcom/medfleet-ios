@@ -136,6 +136,20 @@ struct BuyerSettingsView: View {
                 title: "الأمان والتواصل",
                 body: "جميع الاتصالات مشفّرة عبر HTTPS والوصول محمي برمز دخول. لأي استفسار حول الخصوصية تواصل معنا على support@medfleet.net."
             )
+
+            if let url = URL(string: "https://medfleet.net/privacy") {
+                Link(destination: url) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "safari")
+                        Text("عرض السياسة الكاملة على الويب")
+                            .fontWeight(.semibold)
+                    }
+                    .font(.caption)
+                    .foregroundStyle(MFColors.goldDark)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.top, 4)
+                }
+            }
         }
         .padding(16)
         .background(Color.white)
