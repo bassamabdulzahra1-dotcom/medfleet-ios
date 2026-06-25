@@ -4,8 +4,8 @@ struct BuyerScanView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
 
-    @State private var pickedImageData: Data?
-    @State private var pickedThumbnail: UIImage?
+    @State private var pages: [Data] = []
+    @State private var thumbnails: [UIImage] = []
     @State private var preview: BuyerPreviewData?
     @State private var result: BuyerScanData?
 
@@ -82,13 +82,7 @@ struct BuyerScanView: View {
 
     private var pickerCard: some View {
         VStack(alignment: .trailing, spacing: 12) {
-            if let thumb = pickedThumbnail {
-                Image(uiImage: thumb)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxHeight: 220)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-            } else {
+            if thumbnails.isEmpty {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(MFColors.cream)
                     .frame(height: 130)
@@ -102,10 +96,23 @@ struct BuyerScanView: View {
                                 .foregroundStyle(MFColors.muted)
                         }
                     )
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(Array(thumbnails.enumerated()), id: \.offset) { idx, img in
+                            pageThumb(img, index: idx)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+                Text("عدد الصفحات: \(pages.count) — صوّر كل ورقة وأضفها ثم اقرأ الفاتورة كاملة")
+                    .font(.caption2)
+                    .foregroundStyle(MFColors.muted)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
 
             HStack(spacing: 10) {
-                actionButton(title: "تصوير", icon: "camera.fill", filled: true) {
+                actionButton(title: thumbnails.isEmpty ? "تصوير" : "إضافة بالتصوير", icon: "camera.fill", filled: true) {
                     error = nil
                     showCamera = true
                 }
@@ -115,13 +122,15 @@ struct BuyerScanView: View {
                 }
             }
 
-            if pickedImageData != nil {
+            if !pages.isEmpty {
                 Button {
                     Task { await runPreview() }
                 } label: {
                     HStack {
                         if loadingPreview { ProgressView().tint(MFColors.navy) }
-                        Text(loadingPreview ? "جاري القراءة…" : "قراءة الفاتورة")
+                        Text(loadingPreview
+                             ? "جاري القراءة…"
+                             : (pages.count > 1 ? "قراءة الفاتورة (\(pages.count) صفحات)" : "قراءة الفاتورة"))
                             .fontWeight(.bold)
                     }
                     .frame(maxWidth: .infinity)
@@ -138,6 +147,34 @@ struct BuyerScanView: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
+    }
+
+    private func pageThumb(_ img: UIImage, index: Int) -> some View {
+        ZStack(alignment: .topLeading) {
+            Image(uiImage: img)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 92, height: 120)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(MFColors.navy.opacity(0.12), lineWidth: 1))
+            Text("\(index + 1)")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 7).padding(.vertical, 3)
+                .background(MFColors.navy.opacity(0.85))
+                .clipShape(Capsule())
+                .padding(5)
+            Button {
+                removePage(index)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.body)
+                    .foregroundStyle(.white, MFColors.danger)
+            }
+            .frame(maxWidth: 92, maxHeight: 120, alignment: .topTrailing)
+            .padding(4)
+        }
+        .frame(width: 92, height: 120)
     }
 
     // MARK: - Review card (before commit)
@@ -354,20 +391,28 @@ struct BuyerScanView: View {
     // MARK: - Actions
 
     private func handlePicked(_ data: Data) {
-        pickedImageData = data
-        pickedThumbnail = UIImage(data: data)
+        pages.append(data)
+        if let img = UIImage(data: data) { thumbnails.append(img) }
         preview = nil
         result = nil
         error = nil
     }
 
+    private func removePage(_ index: Int) {
+        guard pages.indices.contains(index) else { return }
+        pages.remove(at: index)
+        if thumbnails.indices.contains(index) { thumbnails.remove(at: index) }
+        preview = nil
+        error = nil
+    }
+
     private func runPreview() async {
-        guard let api = appState.api, let data = pickedImageData else { return }
+        guard let api = appState.api, !pages.isEmpty else { return }
         loadingPreview = true
         error = nil
         defer { loadingPreview = false }
         do {
-            preview = try await api.buyerScanPreview(imageData: data)
+            preview = try await api.buyerScanPreview(images: pages)
         } catch {
             self.error = friendly(error)
         }
@@ -395,8 +440,8 @@ struct BuyerScanView: View {
     }
 
     private func resetForNewScan() {
-        pickedImageData = nil
-        pickedThumbnail = nil
+        pages = []
+        thumbnails = []
         preview = nil
         result = nil
         error = nil

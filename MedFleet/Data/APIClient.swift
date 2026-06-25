@@ -142,11 +142,11 @@ final class APIClient {
         return r.data
     }
 
-    func buyerScanPreview(imageData: Data) async throws -> BuyerPreviewData {
+    func buyerScanPreview(images: [Data]) async throws -> BuyerPreviewData {
         let r: BuyerPreviewResponse = try await uploadMultipart(
             path: "buyer/scan/preview",
-            imageData: imageData,
-            fileName: "invoice.jpg",
+            images: images,
+            fieldName: "images",
             mimeType: "image/jpeg"
         )
         return r.data
@@ -215,28 +215,32 @@ final class APIClient {
 
     private func uploadMultipart<T: Decodable>(
         path: String,
-        imageData: Data,
-        fileName: String,
+        images: [Data],
+        fieldName: String,
         mimeType: String
     ) async throws -> T {
         let url = APIClient.baseURL.appendingPathComponent(path)
         let boundary = "Boundary-\(UUID().uuidString)"
+        let ext = mimeType.contains("png") ? "png" : (mimeType.contains("webp") ? "webp" : "jpg")
 
         func buildRequest(token: String?) -> URLRequest {
             var req = URLRequest(url: url)
             req.httpMethod = "POST"
-            req.timeoutInterval = 120
+            req.timeoutInterval = 180
             req.setValue("application/json", forHTTPHeaderField: "Accept")
             req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
             if let token {
                 req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             }
             var body = Data()
-            body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"image\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
-            body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
-            body.append(imageData)
-            body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+            for (i, imageData) in images.enumerated() {
+                body.append("--\(boundary)\r\n".data(using: .utf8)!)
+                body.append("Content-Disposition: form-data; name=\"\(fieldName)\"; filename=\"page_\(i + 1).\(ext)\"\r\n".data(using: .utf8)!)
+                body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+                body.append(imageData)
+                body.append("\r\n".data(using: .utf8)!)
+            }
+            body.append("--\(boundary)--\r\n".data(using: .utf8)!)
             req.httpBody = body
             return req
         }
