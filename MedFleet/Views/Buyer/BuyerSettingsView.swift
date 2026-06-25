@@ -7,6 +7,7 @@ struct BuyerSettingsView: View {
 
     @State private var showDeleteConfirm = false
     @State private var deleting = false
+    @State private var loggingOut = false
     @State private var error: String?
 
     private var roleLabel: String {
@@ -26,6 +27,8 @@ struct BuyerSettingsView: View {
                 accountCard
 
                 privacyCard
+
+                logoutCard
 
                 dangerCard
 
@@ -107,7 +110,7 @@ struct BuyerSettingsView: View {
     // MARK: - Privacy policy
 
     private var privacyCard: some View {
-        VStack(alignment: .trailing, spacing: 10) {
+        VStack(alignment: .trailing, spacing: 12) {
             HStack {
                 Spacer()
                 Image(systemName: "lock.shield.fill").foregroundStyle(MFColors.gold)
@@ -116,38 +119,20 @@ struct BuyerSettingsView: View {
                     .foregroundStyle(MFColors.navy)
             }
 
-            policyParagraph(
-                title: "البيانات التي نجمعها",
-                body: "نجمع اسمك وبريدك الإلكتروني ونوع حسابك لتسجيل الدخول وتشغيل التطبيق. وعند استخدام ماسحة الفاتورة نعالج صور الفواتير التي تلتقطها لاستخراج بيانات الأصناف فقط."
-            )
-            policyParagraph(
-                title: "كيف نستخدم بياناتك",
-                body: "تُستخدم بياناتك حصراً لتشغيل ميزات التطبيق: استعراض المخزن، مسح الفواتير، وإنشاء مسوّدات الشراء. لا نبيع بياناتك ولا نشاركها مع أي طرف ثالث لأغراض تسويقية."
-            )
-            policyParagraph(
-                title: "صور الفواتير",
-                body: "تُرفع صور الفواتير إلى خادمنا وتُعالَج عبر خدمة ذكاء اصطناعي لاستخراج النصوص فقط، ثم تُحفظ مرتبطة بمسوّدة الشراء الخاصة بك."
-            )
-            policyParagraph(
-                title: "الاحتفاظ والحذف",
-                body: "يمكنك حذف حسابك نهائياً في أي وقت من هذه الصفحة. عند الحذف تُزال بياناتك الشخصية (الاسم والبريد) ويُلغى ارتباط سجلاتك بحسابك."
-            )
-            policyParagraph(
-                title: "الأمان والتواصل",
-                body: "جميع الاتصالات مشفّرة عبر HTTPS والوصول محمي برمز دخول. لأي استفسار حول الخصوصية تواصل معنا على support@medfleet.net."
-            )
-
             if let url = URL(string: "https://medfleet.net/privacy") {
                 Link(destination: url) {
-                    HStack(spacing: 6) {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(MFColors.muted)
+                        Spacer()
+                        Text("عرض سياسة الخصوصية")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(MFColors.navy)
                         Image(systemName: "safari")
-                        Text("عرض السياسة الكاملة على الويب")
-                            .fontWeight(.semibold)
+                            .foregroundStyle(MFColors.gold)
                     }
-                    .font(.caption)
-                    .foregroundStyle(MFColors.goldDark)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .padding(.top, 4)
+                    .padding(.vertical, 4)
                 }
             }
         }
@@ -157,18 +142,28 @@ struct BuyerSettingsView: View {
         .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
     }
 
-    private func policyParagraph(title: String, body: String) -> some View {
-        VStack(alignment: .trailing, spacing: 3) {
-            Text(title)
-                .font(.caption.weight(.bold))
-                .foregroundStyle(MFColors.goldDark)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-            Text(body)
-                .font(.caption)
-                .foregroundStyle(MFColors.muted)
-                .multilineTextAlignment(.trailing)
-                .frame(maxWidth: .infinity, alignment: .trailing)
+    // MARK: - Logout
+
+    private var logoutCard: some View {
+        Button {
+            Task { await logout() }
+        } label: {
+            HStack {
+                if loggingOut { ProgressView().tint(MFColors.navy) }
+                Image(systemName: "rectangle.portrait.and.arrow.right")
+                Text(loggingOut ? "جاري الخروج…" : "تسجيل الخروج")
+                    .fontWeight(.bold)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 13)
+            .background(Color.white)
+            .foregroundStyle(MFColors.navy)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(MFColors.gold.opacity(0.5), lineWidth: 1))
+            .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
         }
+        .disabled(loggingOut)
+        .opacity(loggingOut ? 0.6 : 1)
     }
 
     // MARK: - Danger zone (delete account)
@@ -212,6 +207,13 @@ struct BuyerSettingsView: View {
     }
 
     // MARK: - Actions
+
+    private func logout() async {
+        loggingOut = true
+        defer { loggingOut = false }
+        await appState.api?.logout()
+        tokenStore.clear()
+    }
 
     private func deleteAccount() async {
         guard let api = appState.api else { return }

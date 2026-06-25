@@ -72,23 +72,6 @@ struct BuyerHomeView: View {
                 .padding(.bottom, 24)
             }
             .background(LinearGradient(colors: [MFColors.bgTop, MFColors.bgBottom], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
-            .safeAreaInset(edge: .top) {
-                HStack {
-                    Button {
-                        Task { await logout() }
-                    } label: {
-                        Image(systemName: "rectangle.portrait.and.arrow.right")
-                            .foregroundStyle(MFColors.gold)
-                            .padding(10)
-                            .background(Color.white)
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 18)
-                .padding(.top, 4)
-            }
             .navigationDestination(for: BuyerRoute.self) { route in
                 Group {
                     switch route {
@@ -101,11 +84,6 @@ struct BuyerHomeView: View {
             }
         }
         .environment(\.layoutDirection, .rightToLeft)
-    }
-
-    private func logout() async {
-        await appState.api?.logout()
-        tokenStore.clear()
     }
 
     @ViewBuilder
