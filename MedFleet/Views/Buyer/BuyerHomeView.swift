@@ -3,6 +3,7 @@ import SwiftUI
 enum BuyerRoute: Hashable {
     case scan
     case inventory
+    case settings
 }
 
 struct BuyerHomeView: View {
@@ -58,6 +59,14 @@ struct BuyerHomeView: View {
                         tint: Color(red: 0.18, green: 0.49, blue: 0.20),
                         bg: Color(red: 0.91, green: 0.96, blue: 0.91)
                     ) { path.append(BuyerRoute.inventory) }
+
+                    moduleCard(
+                        title: "الإعدادات",
+                        subtitle: "بيانات الحساب وسياسة الخصوصية وحذف الحساب",
+                        icon: "gearshape.fill",
+                        tint: Color(red: 0.36, green: 0.42, blue: 0.75),
+                        bg: Color(red: 0.91, green: 0.92, blue: 0.96)
+                    ) { path.append(BuyerRoute.settings) }
                 }
                 .padding(.horizontal, 18)
                 .padding(.bottom, 24)
@@ -85,6 +94,7 @@ struct BuyerHomeView: View {
                     switch route {
                     case .scan: BuyerScanView()
                     case .inventory: BuyerInventoryView()
+                    case .settings: BuyerSettingsView()
                     }
                 }
                 .toolbar(.hidden, for: .navigationBar)

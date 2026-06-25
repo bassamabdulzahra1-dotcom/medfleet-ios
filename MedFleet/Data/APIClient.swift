@@ -161,6 +161,14 @@ final class APIClient {
         return r.data
     }
 
+    func deleteBuyerAccount() async throws {
+        let _: EmptyResponse = try await request(
+            path: "buyer/account",
+            method: "DELETE",
+            body: Optional<String>.none as String?
+        )
+    }
+
     // MARK: - HTTP core
 
     private struct EmptyResponse: Decodable {}
