@@ -125,6 +125,42 @@ final class APIClient {
         return r.data
     }
 
+    // MARK: - Buyer (الصيدلية)
+
+    func buyerInventory(q: String?) async throws -> [InventoryItem] {
+        var path = "buyer/inventory"
+        if let q, !q.isEmpty {
+            let enc = q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? q
+            path += "?q=\(enc)"
+        }
+        let r: InventoryListResponse = try await get(path)
+        return r.data
+    }
+
+    func buyerScans() async throws -> [BuyerScanOrder] {
+        let r: BuyerScanListResponse = try await get("buyer/scans")
+        return r.data
+    }
+
+    func buyerScanPreview(imageData: Data) async throws -> BuyerPreviewData {
+        let r: BuyerPreviewResponse = try await uploadMultipart(
+            path: "buyer/scan/preview",
+            imageData: imageData,
+            fileName: "invoice.jpg",
+            mimeType: "image/jpeg"
+        )
+        return r.data
+    }
+
+    func buyerScanCommit(imageUrl: String?, extracted: BuyerExtractedFull) async throws -> BuyerScanData {
+        let r: BuyerScanResponse = try await request(
+            path: "buyer/scan/commit",
+            method: "POST",
+            body: BuyerCommitRequest(imageUrl: imageUrl, extracted: extracted)
+        )
+        return r.data
+    }
+
     // MARK: - HTTP core
 
     private struct EmptyResponse: Decodable {}
@@ -159,6 +195,52 @@ final class APIClient {
                 var retry = req
                 retry.setValue("Bearer \(newToken)", forHTTPHeaderField: "Authorization")
                 let (d2, r2) = try await session.data(for: retry)
+                guard let h2 = r2 as? HTTPURLResponse else { throw APIError.invalidURL }
+                return try decodeResponse(data: d2, status: h2.statusCode)
+            }
+            tokenStore.clear()
+            throw APIError.unauthorized
+        }
+
+        return try decodeResponse(data: data, status: http.statusCode)
+    }
+
+    private func uploadMultipart<T: Decodable>(
+        path: String,
+        imageData: Data,
+        fileName: String,
+        mimeType: String
+    ) async throws -> T {
+        let url = APIClient.baseURL.appendingPathComponent(path)
+        let boundary = "Boundary-\(UUID().uuidString)"
+
+        func buildRequest(token: String?) -> URLRequest {
+            var req = URLRequest(url: url)
+            req.httpMethod = "POST"
+            req.timeoutInterval = 120
+            req.setValue("application/json", forHTTPHeaderField: "Accept")
+            req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+            if let token {
+                req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            }
+            var body = Data()
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"image\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
+            body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+            body.append(imageData)
+            body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+            req.httpBody = body
+            return req
+        }
+
+        var req = buildRequest(token: tokenStore.token)
+        let (data, response) = try await session.data(for: req)
+        guard let http = response as? HTTPURLResponse else { throw APIError.invalidURL }
+
+        if http.statusCode == 401 {
+            if let newToken = await refreshAccessToken() {
+                req = buildRequest(token: newToken)
+                let (d2, r2) = try await session.data(for: req)
                 guard let h2 = r2 as? HTTPURLResponse else { throw APIError.invalidURL }
                 return try decodeResponse(data: d2, status: h2.statusCode)
             }

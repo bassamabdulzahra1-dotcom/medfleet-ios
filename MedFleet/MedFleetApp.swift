@@ -72,8 +72,12 @@ struct RootView: View {
         Group {
             if showSplash {
                 SplashView()
-            } else if tokenStore.isLoggedIn, tokenStore.user?.role != nil {
-                RepHomeView()
+            } else if tokenStore.isLoggedIn, let role = tokenStore.user?.role {
+                if role == "buyer" {
+                    BuyerHomeView()
+                } else {
+                    RepHomeView()
+                }
             } else {
                 LoginView()
             }

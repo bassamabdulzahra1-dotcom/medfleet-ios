@@ -23,11 +23,11 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>MedFleet يحتاج الكاميرا لمسح QR وتصوير إثبات التسليم.</string>
+	<string>MedFleet يحتاج الكاميرا لتصوير فواتير الشراء ومسحها.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>MedFleet يحتاج موقعك لتسجيل زيارات الصيدليات وتثبيت الإحداثيات.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>MedFleet يحتاج الوصول للصور لرفع إثبات التسليم.</string>
+	<string>MedFleet يحتاج الوصول للصور لاختيار صورة الفاتورة ورفعها.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>
