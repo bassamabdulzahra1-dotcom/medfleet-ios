@@ -7,7 +7,7 @@ struct SplashView: View {
     var body: some View {
         ZStack {
             RadialGradient(
-                colors: [MFColors.navy2, MFColors.navy, Color(red: 0.04, green: 0.07, blue: 0.09)],
+                colors: [Color(red: 0.02, green: 0.09, blue: 0.18), Color(red: 0.04, green: 0.08, blue: 0.16), Color(red: 0.01, green: 0.04, blue: 0.11)],
                 center: .center,
                 startRadius: 20,
                 endRadius: 500
@@ -21,12 +21,12 @@ struct SplashView: View {
 
                 Text("MedFleet")
                     .font(.system(size: 32, weight: .bold))
-                    .foregroundStyle(MFColors.gold)
+                    .foregroundStyle(Color(red: 0.57, green: 0.86, blue: 1.0))
                     .tracking(4)
 
                 Text("المشتريات")
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.65))
+                    .foregroundStyle(.white.opacity(0.75))
             }
             .opacity(opacity)
         }
@@ -41,37 +41,37 @@ private struct SplashLogoView: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 44, style: .continuous)
-                .fill(Color(red: 0.06, green: 0.1, blue: 0.14))
+                .fill(Color(red: 0.05, green: 0.12, blue: 0.2))
 
             Circle()
-                .stroke(Color(red: 0.788, green: 0.659, blue: 0.298).opacity(0.08), lineWidth: 3)
+                .stroke(Color(red: 0.35, green: 0.75, blue: 1.0).opacity(0.12), lineWidth: 3)
                 .frame(width: 146, height: 146)
 
             Circle()
-                .stroke(Color(red: 0.788, green: 0.659, blue: 0.298).opacity(0.12), lineWidth: 3)
+                .stroke(Color(red: 0.4, green: 0.85, blue: 1.0).opacity(0.18), lineWidth: 3)
                 .frame(width: 112, height: 112)
 
             SplashLogoShape()
-                .fill(Color(red: 0.788, green: 0.659, blue: 0.298))
+                .fill(Color(red: 0.35, green: 0.75, blue: 1.0))
                 .frame(width: 220, height: 220)
                 .offset(y: -14)
 
             Circle()
-                .fill(Color(red: 0.06, green: 0.1, blue: 0.14))
+                .fill(Color(red: 0.05, green: 0.12, blue: 0.2))
                 .frame(width: 36, height: 36)
                 .offset(y: -13)
 
             RoundedRectangle(cornerRadius: 6)
-                .fill(Color(red: 0.06, green: 0.1, blue: 0.14))
+                .fill(Color(red: 0.05, green: 0.12, blue: 0.2))
                 .frame(width: 30, height: 10)
                 .offset(x: -6, y: -25)
 
             RoundedRectangle(cornerRadius: 6)
-                .fill(Color(red: 0.06, green: 0.1, blue: 0.14))
+                .fill(Color(red: 0.05, green: 0.12, blue: 0.2))
                 .frame(width: 10, height: 30)
                 .offset(x: 5, y: -36)
         }
-        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 4)
+        .shadow(color: Color.blue.opacity(0.15), radius: 10, x: 0, y: 4)
     }
 }
 
