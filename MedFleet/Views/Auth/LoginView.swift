@@ -13,7 +13,7 @@ struct LoginView: View {
     var body: some View {
         ZStack {
             RadialGradient(
-                colors: [MFColors.navy2, MFColors.navy, Color(red: 0.04, green: 0.07, blue: 0.09)],
+                colors: [Color(red: 0.22, green: 0.12, blue: 0.22), Color(red: 0.13, green: 0.08, blue: 0.15), Color(red: 0.07, green: 0.05, blue: 0.08)],
                 center: .center,
                 startRadius: 20,
                 endRadius: 500
@@ -23,12 +23,23 @@ struct LoginView: View {
             VStack(spacing: 24) {
                 Spacer()
                 VStack(spacing: 12) {
-                    Circle()
-                        .fill(LinearGradient(colors: [MFColors.goldDark, MFColors.gold], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 72, height: 72)
-                        .overlay(Image(systemName: "location.fill").font(.title2).foregroundStyle(MFColors.navy))
-                    Text("MedFleet").font(.title).bold().foregroundStyle(MFColors.gold)
-                    Text("المشتريات").font(.caption).foregroundStyle(.white.opacity(0.65))
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .fill(MedFleetBrandPalette.ivory)
+                            .frame(width: 112, height: 112)
+
+                        MedFleetLogoIconView()
+                            .frame(width: 84, height: 84)
+                    }
+                    .shadow(color: Color.black.opacity(0.16), radius: 18, y: 8)
+
+                    Text("MedFleet")
+                        .font(.title)
+                        .bold()
+                        .foregroundStyle(MedFleetBrandPalette.ivory)
+                    Text("المشتريات")
+                        .font(.caption)
+                        .foregroundStyle(MedFleetBrandPalette.ivory.opacity(0.76))
                 }
 
                 VStack(spacing: 16) {
@@ -40,7 +51,7 @@ struct LoginView: View {
                             }
                             TextField("", text: $email)
                                 .foregroundStyle(.white)
-                                .tint(MFColors.gold)
+                                .tint(MedFleetBrandPalette.ivory)
                                 .textContentType(.emailAddress)
                                 .keyboardType(.emailAddress)
                                 .autocapitalization(.none)
@@ -63,12 +74,12 @@ struct LoginView: View {
                                     }
                                 }
                                 .foregroundStyle(.white)
-                                .tint(MFColors.gold)
+                                .tint(MedFleetBrandPalette.ivory)
                                 .textContentType(.password)
                             }
                             Button { showPassword.toggle() } label: {
                                 Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                                    .foregroundStyle(MFColors.gold)
+                                    .foregroundStyle(MedFleetBrandPalette.ivory)
                             }
                             .buttonStyle(.plain)
                         }
@@ -94,12 +105,12 @@ struct LoginView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
                         .background(
-                            LinearGradient(colors: [MFColors.gold, MFColors.goldDark],
+                            LinearGradient(colors: [MedFleetBrandPalette.plum, MedFleetBrandPalette.plumDark],
                                            startPoint: .top, endPoint: .bottom)
                         )
-                        .foregroundStyle(MFColors.navy)
+                        .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
-                        .shadow(color: MFColors.gold.opacity(0.35), radius: 10, y: 4)
+                        .shadow(color: MedFleetBrandPalette.plumDark.opacity(0.35), radius: 12, y: 6)
                     }
                     .disabled(loading || email.isEmpty || password.isEmpty)
                     .opacity((loading || email.isEmpty || password.isEmpty) ? 0.55 : 1)
@@ -120,16 +131,16 @@ struct LoginView: View {
             content()
             Image(systemName: icon)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(MFColors.gold.opacity(0.9))
+                .foregroundStyle(MedFleetBrandPalette.ivory.opacity(0.92))
                 .frame(width: 22)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 15)
-        .background(Color.white.opacity(0.07))
+        .background(Color.white.opacity(0.09))
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .stroke(MFColors.gold.opacity(0.35), lineWidth: 1)
+                .stroke(MedFleetBrandPalette.ivory.opacity(0.26), lineWidth: 1)
         )
     }
 
