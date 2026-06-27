@@ -1,16 +1,21 @@
 import SwiftUI
 
 enum MFColors {
-    static let navy = Color(red: 0.06, green: 0.10, blue: 0.14)
-    static let navy2 = Color(red: 0.09, green: 0.13, blue: 0.18)
-    static let gold = Color(red: 0.79, green: 0.66, blue: 0.30)
-    static let goldDark = Color(red: 0.65, green: 0.52, blue: 0.22)
-    static let cream = Color(red: 0.96, green: 0.96, blue: 0.93)
+    static let navy = Color(red: 0.04, green: 0.31, blue: 0.35)
+    static let navy2 = Color(red: 0.03, green: 0.44, blue: 0.50)
+    static let gold = Color(red: 0.05, green: 0.69, blue: 0.78)
+    static let goldDark = Color(red: 0.02, green: 0.52, blue: 0.60)
+    static let cream = Color(red: 0.98, green: 0.99, blue: 1.00)
     static let danger = Color(red: 0.72, green: 0.36, blue: 0.33)
-    static let ok = Color(red: 0.31, green: 0.55, blue: 0.37)
-    static let muted = Color(red: 0.54, green: 0.50, blue: 0.43)
-    static let bgTop = Color(red: 0.93, green: 0.91, blue: 0.96)
-    static let bgBottom = Color(red: 0.97, green: 0.96, blue: 0.98)
+    static let ok = Color(red: 0.04, green: 0.62, blue: 0.70)
+    static let muted = Color(red: 0.42, green: 0.50, blue: 0.52)
+    static let bgTop = Color(red: 0.99, green: 1.00, blue: 1.00)
+    static let bgBottom = Color(red: 0.95, green: 0.99, blue: 1.00)
+    static let surface = Color.white
+    static let surfaceSoft = Color(red: 0.94, green: 0.99, blue: 1.00)
+    static let accent = gold
+    static let accentDark = goldDark
+    static let accentSoft = Color(red: 0.88, green: 0.97, blue: 0.99)
 }
 
 enum MFFormat {

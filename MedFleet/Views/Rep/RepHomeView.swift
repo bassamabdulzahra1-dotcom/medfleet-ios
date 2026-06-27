@@ -32,16 +32,16 @@ struct RepHomeView: View {
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .padding(.horizontal, 4)
 
-                    moduleCard(title: "الموردين", icon: "building.columns.fill", tint: Color(red: 0.94, green: 0.38, blue: 0.31), bg: Color(red: 1, green: 0.92, blue: 0.91)) {
+                    moduleCard(title: "الموردين", icon: "building.columns.fill", tint: MFColors.accentDark, bg: MFColors.accentSoft) {
                         path.append(AppRoute.suppliers)
                     }
-                    moduleCard(title: "تسديدات الموردين", icon: "banknote.fill", tint: Color(red: 0.18, green: 0.49, blue: 0.20), bg: Color(red: 0.91, green: 0.96, blue: 0.91)) {
+                    moduleCard(title: "تسديدات الموردين", icon: "banknote.fill", tint: MFColors.accent, bg: MFColors.surfaceSoft) {
                         path.append(AppRoute.settlements)
                     }
-                    moduleCard(title: "المواعيد", icon: "calendar", tint: Color(red: 0.36, green: 0.42, blue: 0.75), bg: Color(red: 0.91, green: 0.92, blue: 0.96), badge: appointmentCount, subtitle: appointmentsTotal > 0 ? "\(MFFormat.money(appointmentsTotal)) د.ع" : nil) {
+                    moduleCard(title: "المواعيد", icon: "calendar", tint: MFColors.navy2, bg: MFColors.accentSoft, badge: appointmentCount, subtitle: appointmentsTotal > 0 ? "\(MFFormat.money(appointmentsTotal)) د.ع" : nil) {
                         path.append(AppRoute.appointments)
                     }
-                    moduleCard(title: "حسابي", icon: "person.fill", tint: Color(red: 0.53, green: 0.35, blue: 0.48), bg: Color(red: 0.95, green: 0.91, blue: 0.94)) {
+                    moduleCard(title: "حسابي", icon: "person.fill", tint: MFColors.ok, bg: MFColors.surfaceSoft) {
                         path.append(AppRoute.account)
                     }
                 }
@@ -95,13 +95,13 @@ struct RepHomeView: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 7)
                                 .padding(.vertical, 3)
-                                .background(Color.red)
+                                .background(MFColors.accentDark)
                                 .clipShape(Capsule())
                         }
                         Text(title).font(.body.weight(.medium)).foregroundStyle(MFColors.navy)
                     }
                     if let subtitle {
-                        Text(subtitle).font(.subheadline.weight(.semibold)).foregroundStyle(Color(red: 0.36, green: 0.42, blue: 0.75))
+                        Text(subtitle).font(.subheadline.weight(.semibold)).foregroundStyle(MFColors.accentDark)
                     }
                 }
             }

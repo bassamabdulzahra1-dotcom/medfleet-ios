@@ -58,7 +58,7 @@ struct SupplierPaymentsView: View {
                 HStack {
                     Text("الموردين").font(.title2.bold()).foregroundStyle(MFColors.navy)
                     Spacer()
-                    Button("تحديث") { Task { await load(force: true) } }.foregroundStyle(MFColors.gold)
+                    Button("تحديث") { Task { await load(force: true) } }.foregroundStyle(MFColors.accentDark)
                 }
                 .padding(.horizontal)
                 .padding(.top, 60)
@@ -68,7 +68,7 @@ struct SupplierPaymentsView: View {
                     Image(systemName: "magnifyingglass").foregroundStyle(MFColors.muted)
                     TextField("بحث باسم المورد", text: $query)
                         .foregroundStyle(MFColors.navy)
-                        .tint(MFColors.gold)
+                        .tint(MFColors.accent)
                         .autocorrectionDisabled(true)
                         .textInputAutocapitalization(.never)
                     if !query.isEmpty {
@@ -80,7 +80,7 @@ struct SupplierPaymentsView: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(MFColors.navy.opacity(0.06))
+                .background(MFColors.accentSoft)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .padding(.horizontal)
                 .padding(.bottom, 6)
@@ -145,7 +145,7 @@ struct SupplierPaymentsView: View {
                                 .font(.caption2)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(MFColors.gold.opacity(0.15))
+                                .background(MFColors.accentSoft)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                     }
@@ -158,7 +158,7 @@ struct SupplierPaymentsView: View {
             Button { invoicesFor = s } label: {
                 Text("عرض الفواتير غير المسددة")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(MFColors.gold)
+                    .foregroundStyle(MFColors.accentDark)
             }
             .buttonStyle(.borderless)
         }

@@ -137,7 +137,7 @@ private struct InventoryRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("بيع: \(MFFormat.money(item.salePrice ?? 0)) د.ع")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(MFColors.goldDark)
+                        .foregroundStyle(MFColors.accentDark)
                     Text("كلفة: \(MFFormat.money(item.standardCost ?? 0))")
                         .font(.caption2)
                         .foregroundStyle(MFColors.muted)

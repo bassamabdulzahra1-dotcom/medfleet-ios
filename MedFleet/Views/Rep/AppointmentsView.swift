@@ -61,7 +61,7 @@ struct AppointmentsView: View {
                                             Text("يوم \(MFFormat.arabicDay(g.key))").font(.headline)
                                             Text(MFFormat.dueDate(g.key)).font(.caption)
                                             Text("\(g.items.count) \(g.items.count == 1 ? "مكتب" : "مكاتب") — \(MFFormat.money(g.items.reduce(0) { $0 + $1.amount })) د.ع")
-                                                .font(.subheadline.weight(.semibold)).foregroundStyle(MFColors.gold)
+                                                .font(.subheadline.weight(.semibold)).foregroundStyle(MFColors.accentDark)
                                         }
                                     }
                                 }

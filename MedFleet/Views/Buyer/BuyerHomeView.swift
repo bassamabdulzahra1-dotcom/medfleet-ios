@@ -34,7 +34,7 @@ struct BuyerHomeView: View {
                             .foregroundStyle(MFColors.navy)
                         Text("لوحة المشتري")
                             .font(.caption)
-                            .foregroundStyle(MFColors.gold)
+                            .foregroundStyle(MFColors.accentDark)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.top, 8)
@@ -49,32 +49,32 @@ struct BuyerHomeView: View {
                         title: "ماسحة الفاتورة",
                         subtitle: "صوّر فاتورة الشراء واستخرج الأصناف تلقائياً",
                         icon: "doc.text.viewfinder",
-                        tint: Color(red: 0.94, green: 0.38, blue: 0.31),
-                        bg: Color(red: 1, green: 0.92, blue: 0.91)
+                        tint: MFColors.accentDark,
+                        bg: MFColors.accentSoft
                     ) { path.append(BuyerRoute.scan) }
 
                     moduleCard(
                         title: "المخزن",
                         subtitle: "استعرض المنتجات والأرصدة والأسعار",
                         icon: "shippingbox.fill",
-                        tint: Color(red: 0.18, green: 0.49, blue: 0.20),
-                        bg: Color(red: 0.91, green: 0.96, blue: 0.91)
+                        tint: MFColors.accent,
+                        bg: MFColors.surfaceSoft
                     ) { path.append(BuyerRoute.inventory) }
 
                     moduleCard(
                         title: "الجرد المخزني",
                         subtitle: "مسح باركود سريع ومقارنة رصيد المخزن مع الكمية الحالية",
                         icon: "barcode.viewfinder",
-                        tint: Color(red: 0.42, green: 0.28, blue: 0.56),
-                        bg: Color(red: 0.94, green: 0.91, blue: 0.97)
+                        tint: MFColors.navy2,
+                        bg: MFColors.accentSoft
                     ) { path.append(BuyerRoute.inventoryAudit) }
 
                     moduleCard(
                         title: "الإعدادات",
                         subtitle: "بيانات الحساب وسياسة الخصوصية وحذف الحساب",
                         icon: "gearshape.fill",
-                        tint: Color(red: 0.36, green: 0.42, blue: 0.75),
-                        bg: Color(red: 0.91, green: 0.92, blue: 0.96)
+                        tint: MFColors.ok,
+                        bg: MFColors.surfaceSoft
                     ) { path.append(BuyerRoute.settings) }
                 }
                 .padding(.horizontal, 18)
@@ -112,7 +112,7 @@ struct BuyerHomeView: View {
                 }
             }
             .padding(16)
-            .background(Color.white)
+            .background(MFColors.surface)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
         }

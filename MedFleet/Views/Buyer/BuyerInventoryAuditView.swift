@@ -102,7 +102,7 @@ struct BuyerInventoryAuditView: View {
                         .font(.subheadline.weight(.bold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 11)
-                        .background(LinearGradient(colors: [MFColors.navy2, MFColors.navy], startPoint: .top, endPoint: .bottom))
+                        .background(LinearGradient(colors: [MFColors.accent, MFColors.accentDark], startPoint: .top, endPoint: .bottom))
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 11))
                 }
@@ -247,8 +247,8 @@ struct BuyerInventoryAuditView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 13)
-            .background(LinearGradient(colors: [MFColors.gold, MFColors.goldDark], startPoint: .top, endPoint: .bottom))
-            .foregroundStyle(MFColors.navy)
+            .background(LinearGradient(colors: [MFColors.accent, MFColors.accentDark], startPoint: .top, endPoint: .bottom))
+            .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .padding(.horizontal, 16)
             .padding(.vertical, 10)

@@ -90,7 +90,7 @@ struct BuyerScanView: View {
                         VStack(spacing: 8) {
                             Image(systemName: "doc.text.viewfinder")
                                 .font(.largeTitle)
-                                .foregroundStyle(MFColors.gold)
+                                .foregroundStyle(MFColors.accentDark)
                             Text("صوّر فاتورة الشراء أو اخترها من المعرض")
                                 .font(.caption)
                                 .foregroundStyle(MFColors.muted)
@@ -135,8 +135,8 @@ struct BuyerScanView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 13)
-                    .background(LinearGradient(colors: [MFColors.gold, MFColors.goldDark], startPoint: .top, endPoint: .bottom))
-                    .foregroundStyle(MFColors.navy)
+                    .background(LinearGradient(colors: [MFColors.accent, MFColors.accentDark], startPoint: .top, endPoint: .bottom))
+                    .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .disabled(loadingPreview)
@@ -205,7 +205,7 @@ struct BuyerScanView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 13)
-                .background(MFColors.navy)
+                .background(LinearGradient(colors: [MFColors.accent, MFColors.accentDark], startPoint: .top, endPoint: .bottom))
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
@@ -287,7 +287,7 @@ struct BuyerScanView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(MFFormat.money(Double(o.amountTotal ?? "0") ?? 0)) د.ع")
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(MFColors.goldDark)
+                    .foregroundStyle(MFColors.accentDark)
                 if let n = o.lineCount {
                     Text("\(n) صنف").font(.caption2).foregroundStyle(MFColors.muted)
                 }

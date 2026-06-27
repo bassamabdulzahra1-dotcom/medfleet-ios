@@ -113,7 +113,7 @@ struct BuyerSettingsView: View {
         VStack(alignment: .trailing, spacing: 12) {
             HStack {
                 Spacer()
-                Image(systemName: "lock.shield.fill").foregroundStyle(MFColors.gold)
+                Image(systemName: "lock.shield.fill").foregroundStyle(MFColors.accentDark)
                 Text("سياسة الخصوصية")
                     .font(.subheadline.bold())
                     .foregroundStyle(MFColors.navy)
@@ -130,7 +130,7 @@ struct BuyerSettingsView: View {
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(MFColors.navy)
                         Image(systemName: "safari")
-                            .foregroundStyle(MFColors.gold)
+                            .foregroundStyle(MFColors.accentDark)
                     }
                     .padding(.vertical, 4)
                 }
@@ -159,7 +159,7 @@ struct BuyerSettingsView: View {
             .background(Color.white)
             .foregroundStyle(MFColors.navy)
             .clipShape(RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(MFColors.gold.opacity(0.5), lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(MFColors.accent.opacity(0.45), lineWidth: 1))
             .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
         }
         .disabled(loggingOut)
