@@ -256,8 +256,8 @@ public struct CapsuleSplashView: View {
                         gc.translateBy(x: offsetX, y: offsetY)
                         gc.scaleBy(x: scale, y: scale)
                         for piece in Piece.allCases {
-                            let frame = frame(for: piece, elapsed: elapsed)
-                            gc.fill(path(for: frame), with: .color(.white))
+                            let pieceFrame = frame(for: piece, elapsed: elapsed)
+                            gc.fill(path(for: pieceFrame), with: .color(.white))
                         }
                     }
 
