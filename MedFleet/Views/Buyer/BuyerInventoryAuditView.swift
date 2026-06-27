@@ -472,22 +472,6 @@ struct BuyerInventoryAuditView: View {
             self.error = mapError(error, fallback: "تعذر ترحيل الفروقات. تأكد من توفر API الجرد في السيرفر.")
         }
     }
-
-    private func mapError(_ error: Error, fallback: String) -> String {
-        if let apiError = error as? APIError {
-            switch apiError {
-            case .unauthorized:
-                return "انتهت الجلسة. سجل دخول مرة ثانية"
-            case .http(let code, let msg):
-                if code == 404 { return "خدمة الجرد غير مفعلة على السيرفر" }
-                if code >= 500 { return "السيرفر غير متاح حالياً. حاول بعد قليل" }
-                return msg ?? fallback
-            default:
-                return apiError.localizedDescription
-            }
-        }
-        return fallback
-    }
 }
 
 private struct AuditLine: Identifiable {
