@@ -137,7 +137,7 @@ private func finalRadii(for corner: Corner, radius: CGFloat) -> (CGFloat, CGFloa
     return (tl, tr, br, bl)
 }
 
-private func frame(for piece: Piece, elapsed: Double) -> PieceFrame {
+private func pieceFrame(for piece: Piece, elapsed: Double) -> PieceFrame {
     let g = geometry[piece]!
     let center: CGPoint
     let shapeT: CGFloat
@@ -256,8 +256,8 @@ public struct CapsuleSplashView: View {
                         gc.translateBy(x: offsetX, y: offsetY)
                         gc.scaleBy(x: scale, y: scale)
                         for piece in Piece.allCases {
-                            let pieceFrame = frame(for: piece, elapsed: elapsed)
-                            gc.fill(path(for: pieceFrame), with: .color(.white))
+                            let currentPieceFrame = pieceFrame(for: piece, elapsed: elapsed)
+                            gc.fill(path(for: currentPieceFrame), with: .color(.white))
                         }
                     }
 
