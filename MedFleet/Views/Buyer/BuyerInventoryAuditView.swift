@@ -386,8 +386,10 @@ struct BuyerInventoryAuditView: View {
     private func searchByNameOrBarcode(_ text: String) async {
         guard let api = appState.api else { return }
         loadingResults = true
+        error = nil
         do {
             results = try await api.buyerInventory(q: text)
+            error = nil
         } catch {
             results = []
             self.error = mapError(error, fallback: "تعذر البحث عن المنتج")
@@ -402,6 +404,7 @@ struct BuyerInventoryAuditView: View {
         do {
             if let item = try await api.buyerInventoryByBarcode(code) {
                 addLine(item)
+                error = nil
                 success = "تمت إضافة المنتج من الباركود"
             } else {
                 error = "لم يتم العثور على منتج بهذا الباركود"
@@ -431,9 +434,11 @@ struct BuyerInventoryAuditView: View {
 
     private func addLine(_ item: InventoryItem) {
         if lines.contains(where: { $0.item.id == item.id }) {
+            error = nil
             success = "المنتج مضاف مسبقاً"
             return
         }
+        error = nil
         lines.insert(AuditLine(item: item), at: 0)
         results.removeAll(where: { $0.id == item.id })
         query = ""
