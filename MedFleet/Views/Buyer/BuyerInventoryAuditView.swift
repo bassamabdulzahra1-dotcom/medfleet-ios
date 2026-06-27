@@ -489,10 +489,6 @@ struct BuyerInventoryAuditView: View {
         query = ""
         note = ""
         error = nil
-
-        if BarcodeScannerAvailability.isAvailable {
-            showScanner = true
-        }
     }
 }
 
