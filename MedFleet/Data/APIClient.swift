@@ -137,6 +137,27 @@ final class APIClient {
         return r.data
     }
 
+    func buyerInventoryByBarcode(_ barcode: String) async throws -> InventoryItem? {
+        let code = barcode.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !code.isEmpty else { return nil }
+        let list = try await buyerInventory(q: code)
+        if let exact = list.first(where: { ($0.barcode ?? "").trimmingCharacters(in: .whitespacesAndNewlines) == code }) {
+            return exact
+        }
+        return list.first
+    }
+
+    func buyerInventoryAuditCommit(lines: [BuyerInventoryAuditLineInput], note: String?) async throws -> BuyerInventoryAuditCommitResult {
+        let total = lines.reduce(0) { $0 + $1.diffValue }
+        let req = BuyerInventoryAuditCommitRequest(lines: lines, note: note, totalDiffValue: total)
+        let r: BuyerInventoryAuditCommitResponse = try await request(
+            path: "buyer/inventory/audit/commit",
+            method: "POST",
+            body: req
+        )
+        return r.data
+    }
+
     func buyerScans() async throws -> [BuyerScanOrder] {
         let r: BuyerScanListResponse = try await get("buyer/scans")
         return r.data

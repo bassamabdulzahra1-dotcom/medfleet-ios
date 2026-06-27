@@ -3,6 +3,7 @@ import SwiftUI
 enum BuyerRoute: Hashable {
     case scan
     case inventory
+    case inventoryAudit
     case settings
 }
 
@@ -61,6 +62,14 @@ struct BuyerHomeView: View {
                     ) { path.append(BuyerRoute.inventory) }
 
                     moduleCard(
+                        title: "الجرد المخزني",
+                        subtitle: "مسح باركود سريع ومقارنة رصيد المخزن مع الكمية الحالية",
+                        icon: "barcode.viewfinder",
+                        tint: Color(red: 0.42, green: 0.28, blue: 0.56),
+                        bg: Color(red: 0.94, green: 0.91, blue: 0.97)
+                    ) { path.append(BuyerRoute.inventoryAudit) }
+
+                    moduleCard(
                         title: "الإعدادات",
                         subtitle: "بيانات الحساب وسياسة الخصوصية وحذف الحساب",
                         icon: "gearshape.fill",
@@ -77,6 +86,7 @@ struct BuyerHomeView: View {
                     switch route {
                     case .scan: BuyerScanView()
                     case .inventory: BuyerInventoryView()
+                    case .inventoryAudit: BuyerInventoryAuditView()
                     case .settings: BuyerSettingsView()
                     }
                 }

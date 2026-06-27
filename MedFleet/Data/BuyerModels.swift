@@ -227,3 +227,86 @@ struct BuyerCommitRequest: Encodable {
         case imageUrl = "image_url"
     }
 }
+
+// MARK: - Inventory audit (الجرد المخزني)
+
+struct BuyerInventoryAuditLineInput: Encodable {
+    let productId: String
+    let productName: String
+    let barcode: String?
+    let stockQty: Double
+    let currentQty: Double
+    let diffQty: Double
+    let unitCost: Double
+    let diffValue: Double
+
+    enum CodingKeys: String, CodingKey {
+        case barcode
+        case productId = "product_id"
+        case productName = "product_name"
+        case stockQty = "stock_qty"
+        case currentQty = "current_qty"
+        case diffQty = "diff_qty"
+        case unitCost = "unit_cost"
+        case diffValue = "diff_value"
+    }
+}
+
+struct BuyerInventoryAuditCommitRequest: Encodable {
+    let lines: [BuyerInventoryAuditLineInput]
+    let note: String?
+    let totalDiffValue: Double
+
+    enum CodingKeys: String, CodingKey {
+        case lines, note
+        case totalDiffValue = "total_diff_value"
+    }
+}
+
+struct BuyerInventoryAuditCommitResult: Decodable {
+    let reference: String?
+    let message: String?
+    let totalDiffValue: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case reference, message
+        case totalDiffValue = "total_diff_value"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        reference = try? c.decodeIfPresent(String.self, forKey: .reference)
+        message = try? c.decodeIfPresent(String.self, forKey: .message)
+        totalDiffValue = c.flexibleDouble(.totalDiffValue)
+    }
+}
+
+struct BuyerInventoryAuditCommitResponse: Decodable {
+    let data: BuyerInventoryAuditCommitResult
+
+    private enum RootKeys: String, CodingKey {
+        case data, message, reference
+        case totalDiffValue = "total_diff_value"
+    }
+
+    init(from decoder: Decoder) throws {
+        let root = try decoder.container(keyedBy: RootKeys.self)
+        if let nested = try? root.decode(BuyerInventoryAuditCommitResult.self, forKey: .data) {
+            data = nested
+            return
+        }
+        data = BuyerInventoryAuditCommitResult(
+            reference: try? root.decodeIfPresent(String.self, forKey: .reference),
+            message: try? root.decodeIfPresent(String.self, forKey: .message),
+            totalDiffValue: root.flexibleDouble(.totalDiffValue)
+        )
+    }
+}
+
+private extension BuyerInventoryAuditCommitResult {
+    init(reference: String?, message: String?, totalDiffValue: Double?) {
+        self.reference = reference
+        self.message = message
+        self.totalDiffValue = totalDiffValue
+    }
+}
