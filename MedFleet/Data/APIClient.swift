@@ -131,7 +131,9 @@ final class APIClient {
         var path = "buyer/inventory"
         if let q, !q.isEmpty {
             let enc = q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? q
-            path += "?q=\(enc)"
+            path += "?q=\(enc)&limit=40"
+        } else {
+            path += "?limit=500"
         }
         let r: InventoryListResponse = try await get(path)
         return r.data

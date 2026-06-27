@@ -55,7 +55,7 @@ struct BuyerInventoryAuditView: View {
             }
             searchTask?.cancel()
             searchTask = Task {
-                try? await Task.sleep(nanoseconds: 300_000_000)
+                try? await Task.sleep(nanoseconds: 120_000_000)
                 if Task.isCancelled { return }
                 await searchByNameOrBarcode(value)
             }
@@ -292,17 +292,42 @@ struct BuyerInventoryAuditView: View {
                 metricBox(title: "المخزن", value: MFFormat.money(stock), tint: MFColors.navy)
 
                 VStack(alignment: .trailing, spacing: 3) {
-                    Text("الحالية")
+                    Text("الحالية (باكيت + شريط)")
                         .font(.caption2)
                         .foregroundStyle(MFColors.muted)
-                    TextField("0", text: line.currentQtyText)
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.center)
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 6)
-                        .background(Color.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(MFColors.muted.opacity(0.2), lineWidth: 1))
+                    HStack(spacing: 6) {
+                        VStack(spacing: 2) {
+                            Text("باكيت")
+                                .font(.caption2)
+                                .foregroundStyle(MFColors.muted)
+                            TextField("0", text: line.packetQtyText)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.center)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 6)
+                                .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(MFColors.muted.opacity(0.2), lineWidth: 1))
+                        }
+                        VStack(spacing: 2) {
+                            Text("شريط")
+                                .font(.caption2)
+                                .foregroundStyle(MFColors.muted)
+                            TextField("0", text: line.stripQtyText)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.center)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 6)
+                                .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(MFColors.muted.opacity(0.2), lineWidth: 1))
+                        }
+                    }
+                    if let spp = item.stripsPerPacket, spp > 0 {
+                        Text("كل باكيت = \(spp) شريط")
+                            .font(.caption2)
+                            .foregroundStyle(MFColors.muted)
+                    }
                 }
                 .frame(maxWidth: .infinity)
 
@@ -444,25 +469,59 @@ struct BuyerInventoryAuditView: View {
             success = (r.message?.isEmpty == false ? r.message! : "تم ترحيل الفروقات للحسابات بنجاح") + ref
             note = ""
         } catch {
-            self.error = "تعذر ترحيل الفروقات. تأكد من توفر API الجرد في السيرفر."
+            self.error = mapError(error, fallback: "تعذر ترحيل الفروقات. تأكد من توفر API الجرد في السيرفر.")
         }
+    }
+
+    private func mapError(_ error: Error, fallback: String) -> String {
+        if let apiError = error as? APIError {
+            switch apiError {
+            case .unauthorized:
+                return "انتهت الجلسة. سجل دخول مرة ثانية"
+            case .http(let code, let msg):
+                if code == 404 { return "خدمة الجرد غير مفعلة على السيرفر" }
+                if code >= 500 { return "السيرفر غير متاح حالياً. حاول بعد قليل" }
+                return msg ?? fallback
+            default:
+                return apiError.localizedDescription
+            }
+        }
+        return fallback
     }
 }
 
 private struct AuditLine: Identifiable {
     let id = UUID()
     let item: InventoryItem
-    var currentQtyText: String
+    var packetQtyText: String
+    var stripQtyText: String
 
     init(item: InventoryItem) {
         self.item = item
-        self.currentQtyText = MFFormat.money(item.qtyOnHand ?? 0)
+        let stock = item.qtyOnHand ?? 0
+        if let spp = item.stripsPerPacket, spp > 0 {
+            let sppD = Double(spp)
+            let packets = floor(stock)
+            let strips = Int(round((stock - packets) * sppD))
+            self.packetQtyText = String(Int(max(0, packets)))
+            self.stripQtyText = String(max(0, strips))
+        } else {
+            self.packetQtyText = MFFormat.money(stock)
+            self.stripQtyText = "0"
+        }
     }
 
     var stockQty: Double { item.qtyOnHand ?? 0 }
 
     var currentQty: Double {
-        MFFormat.westernDouble(currentQtyText) ?? 0
+        if let spp = item.stripsPerPacket, spp > 0 {
+            let packets = max(0, MFFormat.westernDouble(packetQtyText) ?? 0)
+            let stripsRaw = max(0, Int(MFFormat.westernDouble(stripQtyText) ?? 0))
+            let extraPackets = stripsRaw / spp
+            let remainingStrips = stripsRaw % spp
+            return packets + Double(extraPackets) + (Double(remainingStrips) / Double(spp))
+        }
+        return max(0, MFFormat.westernDouble(packetQtyText) ?? 0)
     }
 
     var diffQty: Double {
