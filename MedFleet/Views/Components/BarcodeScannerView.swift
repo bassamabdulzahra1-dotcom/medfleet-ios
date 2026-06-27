@@ -75,6 +75,7 @@ struct BarcodeScannerSheet: UIViewControllerRepresentable {
 }
 
 struct BarcodeScannerAvailability {
+    @MainActor
     static var isAvailable: Bool {
         DataScannerViewController.isSupported && DataScannerViewController.isAvailable
     }

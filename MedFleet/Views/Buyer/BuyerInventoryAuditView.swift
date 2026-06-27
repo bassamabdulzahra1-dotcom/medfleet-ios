@@ -384,7 +384,7 @@ struct BuyerInventoryAuditView: View {
                 await searchByNameOrBarcode(code)
             }
         } catch {
-            error = "فشل قراءة الباركود من المخزن"
+            self.error = "فشل قراءة الباركود من المخزن"
         }
     }
 
