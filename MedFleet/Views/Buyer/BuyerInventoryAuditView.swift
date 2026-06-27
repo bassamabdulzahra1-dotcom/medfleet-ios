@@ -392,7 +392,7 @@ struct BuyerInventoryAuditView: View {
             error = nil
         } catch {
             results = []
-            self.error = mapError(error, fallback: "تعذر البحث عن المنتج")
+            self.error = mapError(error, fallback: "تعذر البحث عن المنتج", notFoundMessage: "خدمة المخزن غير مفعلة على السيرفر")
         }
         loadingResults = false
     }
@@ -412,17 +412,17 @@ struct BuyerInventoryAuditView: View {
                 await searchByNameOrBarcode(code)
             }
         } catch {
-            self.error = mapError(error, fallback: "فشل قراءة الباركود من المخزن")
+            self.error = mapError(error, fallback: "فشل قراءة الباركود من المخزن", notFoundMessage: "خدمة المخزن غير مفعلة على السيرفر")
         }
     }
 
-    private func mapError(_ error: Error, fallback: String) -> String {
+    private func mapError(_ error: Error, fallback: String, notFoundMessage: String) -> String {
         if let apiError = error as? APIError {
             switch apiError {
             case .unauthorized:
                 return "انتهت الجلسة. سجل دخول مرة ثانية"
             case .http(let code, let msg):
-                if code == 404 { return "خدمة المخزن غير مفعلة على السيرفر" }
+                if code == 404 { return notFoundMessage }
                 if code >= 500 { return "السيرفر غير متاح حالياً. حاول بعد قليل" }
                 return msg ?? fallback
             default:
@@ -474,7 +474,11 @@ struct BuyerInventoryAuditView: View {
             success = (r.message?.isEmpty == false ? r.message! : "تم ترحيل الفروقات للحسابات بنجاح") + ref
             note = ""
         } catch {
-            self.error = mapError(error, fallback: "تعذر ترحيل الفروقات. تأكد من توفر API الجرد في السيرفر.")
+            self.error = mapError(
+                error,
+                fallback: "تعذر ترحيل الفروقات. تأكد من توفر API الجرد في السيرفر.",
+                notFoundMessage: "API ترحيل الجرد غير منشور على السيرفر. لازم deploy لآخر نسخة backend"
+            )
         }
     }
 }
