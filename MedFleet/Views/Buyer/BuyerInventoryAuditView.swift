@@ -472,13 +472,26 @@ struct BuyerInventoryAuditView: View {
             let r = try await api.buyerInventoryAuditCommit(lines: payload, note: note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : note)
             let ref = r.reference?.isEmpty == false ? " - مرجع: \(r.reference!)" : ""
             success = (r.message?.isEmpty == false ? r.message! : "تم ترحيل الفروقات للحسابات بنجاح") + ref
-            note = ""
+            resetForNextAudit()
         } catch {
             self.error = mapError(
                 error,
                 fallback: "تعذر ترحيل الفروقات. تأكد من توفر API الجرد في السيرفر.",
                 notFoundMessage: "API ترحيل الجرد غير منشور على السيرفر. لازم deploy لآخر نسخة backend"
             )
+        }
+    }
+
+    private func resetForNextAudit() {
+        // Keep success banner, but clear previous audit lines to start fresh immediately.
+        lines = []
+        results = []
+        query = ""
+        note = ""
+        error = nil
+
+        if BarcodeScannerAvailability.isAvailable {
+            showScanner = true
         }
     }
 }
