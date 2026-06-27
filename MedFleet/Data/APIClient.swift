@@ -204,7 +204,7 @@ final class APIClient {
         body: B?,
         auth: Bool = true
     ) async throws -> T {
-        let url = APIClient.baseURL.appendingPathComponent(path)
+        let url = try makeURL(path)
         var req = URLRequest(url: url)
         req.httpMethod = method
         req.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -240,7 +240,7 @@ final class APIClient {
         fieldName: String,
         mimeType: String
     ) async throws -> T {
-        let url = APIClient.baseURL.appendingPathComponent(path)
+        let url = try makeURL(path)
         let boundary = "Boundary-\(UUID().uuidString)"
         let ext = mimeType.contains("png") ? "png" : (mimeType.contains("webp") ? "webp" : "jpg")
 
@@ -298,6 +298,13 @@ final class APIClient {
         } catch {
             throw APIError.decoding(error)
         }
+    }
+
+    private func makeURL(_ path: String) throws -> URL {
+        guard let url = URL(string: path, relativeTo: APIClient.baseURL)?.absoluteURL else {
+            throw APIError.invalidURL
+        }
+        return url
     }
 
     private func refreshAccessToken() async -> String? {
