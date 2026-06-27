@@ -71,7 +71,11 @@ struct RootView: View {
     var body: some View {
         Group {
             if showSplash {
-                SplashView()
+                SplashView {
+                    withAnimation {
+                        showSplash = false
+                    }
+                }
             } else if tokenStore.isLoggedIn, let role = tokenStore.user?.role {
                 if role == "buyer" {
                     BuyerHomeView()
@@ -84,9 +88,6 @@ struct RootView: View {
         }
         .onAppear {
             appState.setup(tokenStore: tokenStore)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
-                withAnimation { showSplash = false }
-            }
         }
     }
 }
