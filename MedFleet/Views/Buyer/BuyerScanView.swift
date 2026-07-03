@@ -316,6 +316,12 @@ struct BuyerScanView: View {
                     .foregroundStyle(MFColors.navy)
                     .multilineTextAlignment(.trailing)
             }
+            if let cat = line.productCategory, !cat.isEmpty {
+                Text("فئة المنتج: \(cat)")
+                    .font(.caption2)
+                    .foregroundStyle(MFColors.muted)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
             HStack(spacing: 10) {
                 Spacer()
                 Text("الكمية: \(fmt(line.qty))").font(.caption).foregroundStyle(MFColors.muted)

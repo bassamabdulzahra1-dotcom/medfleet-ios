@@ -99,6 +99,7 @@ struct BuyerScanListResponse: Decodable { let data: [BuyerScanOrder] }
 struct BuyerScanLine: Decodable {
     let id: String?
     let productName: String
+    let productCategory: String?
     let qty: String?
     let unitPrice: String?
     let discountPercent: String?
@@ -113,6 +114,7 @@ struct BuyerScanLine: Decodable {
     enum CodingKeys: String, CodingKey {
         case id, qty, subtotal, matched
         case productName = "product_name"
+        case productCategory = "product_category"
         case unitPrice = "unit_price"
         case discountPercent = "discount_percent"
         case batchNumber = "batch_number"
@@ -126,6 +128,7 @@ struct BuyerScanLine: Decodable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try? c.decodeIfPresent(String.self, forKey: .id)
         productName = (try? c.decode(String.self, forKey: .productName)) ?? ""
+        productCategory = try? c.decodeIfPresent(String.self, forKey: .productCategory)
         qty = try? c.decodeIfPresent(String.self, forKey: .qty)
         unitPrice = try? c.decodeIfPresent(String.self, forKey: .unitPrice)
         discountPercent = try? c.decodeIfPresent(String.self, forKey: .discountPercent)
@@ -142,6 +145,7 @@ struct BuyerScanLine: Decodable {
 // سطر مستخرَج من الذكاء الاصطناعي (يُعاد إرساله عند الاعتماد)
 struct BuyerExtractLine: Codable {
     let productName: String?
+    let productCategory: String?
     let qty: Double
     let unitPrice: Double
     let discountPercent: Double
@@ -151,6 +155,7 @@ struct BuyerExtractLine: Codable {
     enum CodingKeys: String, CodingKey {
         case qty
         case productName = "product_name"
+        case productCategory = "product_category"
         case unitPrice = "unit_price"
         case discountPercent = "discount_percent"
         case batchNumber = "batch_number"
@@ -160,6 +165,7 @@ struct BuyerExtractLine: Codable {
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         productName = try? c.decodeIfPresent(String.self, forKey: .productName)
+        productCategory = try? c.decodeIfPresent(String.self, forKey: .productCategory)
         qty = c.flexibleDouble(.qty) ?? 0
         unitPrice = c.flexibleDouble(.unitPrice) ?? 0
         discountPercent = c.flexibleDouble(.discountPercent) ?? 0
