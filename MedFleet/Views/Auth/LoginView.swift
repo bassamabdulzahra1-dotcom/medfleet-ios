@@ -140,7 +140,11 @@ struct LoginView: View {
         defer { loading = false }
         guard let api = appState.api else { return }
         do {
-            _ = try await api.login(email: email.trimmingCharacters(in: .whitespaces), password: password)
+            let res = try await api.login(email: email.trimmingCharacters(in: .whitespaces), password: password)
+            if res.user.role != "buyer" {
+                tokenStore.clear()
+                self.error = "هذا الحساب غير مسموح بالدخول من التطبيق"
+            }
         } catch {
             self.error = error.localizedDescription
         }

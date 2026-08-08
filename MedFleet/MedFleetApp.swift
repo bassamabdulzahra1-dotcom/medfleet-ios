@@ -76,14 +76,16 @@ struct RootView: View {
                         showSplash = false
                     }
                 }
-            } else if tokenStore.isLoggedIn, let role = tokenStore.user?.role {
-                if role == "buyer" {
-                    BuyerHomeView()
-                } else {
-                    RepHomeView()
-                }
+            } else if tokenStore.isLoggedIn, tokenStore.user?.role == "buyer" {
+                BuyerHomeView()
             } else {
                 LoginView()
+                    .onAppear {
+                        // أي جلسة قديمة بدور غير الصيدلية غير مدعومة — امسحها
+                        if tokenStore.isLoggedIn, tokenStore.user?.role != "buyer" {
+                            tokenStore.clear()
+                        }
+                    }
             }
         }
         .onAppear {
