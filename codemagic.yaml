@@ -1,5 +1,5 @@
 # MedFleet iOS — Codemagic CI/CD
-# https://codemagic.io — اربط مستودع GitHub ثم شغّل workflow
+# Bundle ID: net.medfleet.rep
 
 definitions:
   env_ios: &env_ios
@@ -11,44 +11,59 @@ definitions:
 
   scripts:
     xcodegen: &run_xcodegen
-      name: Generate Xcode project (XcodeGen)
+      name: Generate Xcode project
       script: |
+        set -e
         brew install xcodegen
         xcodegen generate
-        ls -la MedFleet.xcodeproj
+        ls -la "$XCODE_PROJECT"
 
 workflows:
-  # ── 1) ابدأ بهذا — بدون Apple Developer ─────────────────────────
+
+  # ------------------------------------------------------------
+  # 1) Simulator build
+  # ------------------------------------------------------------
   ios-simulator:
-    name: MedFleet — Simulator (اختبار سريع)
+    name: MedFleet — Simulator
     max_build_duration: 30
     instance_type: mac_mini_m2
+
     environment:
       <<: *env_ios
+
     triggering:
       events:
         - push
       branch_patterns:
         - pattern: main
           include: true
+
     scripts:
       - *run_xcodegen
+
       - name: Build for iOS Simulator
         script: |
           set -o pipefail
+
           xcodebuild build \
             -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
             -scheme "$XCODE_SCHEME" \
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/xcbuild.log
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee /tmp/xcbuild.log
+
           status=${PIPESTATUS[0]}
-          echo "=================== SWIFT ERRORS ==================="
-          grep -nE "error:" /tmp/xcbuild.log || echo "(no error: lines captured)"
-          echo "==================================================="
+
+          echo "================ SWIFT ERRORS ================"
+          grep -nE "error:" /tmp/xcbuild.log || echo "No Swift errors found"
+          echo "=============================================="
+
           exit $status
+
     artifacts:
       - /tmp/xcodebuild_logs/*.log
+
     publishing:
       email:
         recipients:
@@ -57,44 +72,56 @@ workflows:
           success: true
           failure: true
 
-  # ── 2) IPA للآيفون / TestFlight — يحتاج Apple Developer ───────
+  # ------------------------------------------------------------
+  # 2) App Store / TestFlight IPA
+  # ------------------------------------------------------------
   ios-ipa:
-    name: MedFleet — IPA (iPhone / TestFlight)
+    name: MedFleet — IPA (App Store / TestFlight)
     max_build_duration: 60
     instance_type: mac_mini_m2
+
     integrations:
-      app_store_connect: medfleet-apple   # ← غيّر الاسم إذا استخدمت اسماً مختلفاً في Codemagic
+      app_store_connect: medfleet-apple
+
     environment:
       <<: *env_ios
-      groups:
-        - ios_signing
+
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: net.medfleet.rep
+
     scripts:
       - *run_xcodegen
-      - name: Set up code signing (auto-create cert + profile)
+
+      - name: Configure code signing
         script: |
           set -e
           keychain initialize
-          # يستخدم مفتاح خاص ثابت مخزّن بـ Codemagic (CERTIFICATE_PRIVATE_KEY)
-          # فيعيد استخدام نفس الشهادة بدل إنشاء وحدة جديدة كل بناء
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --platform IOS \
-            --certificate-key "$CERTIFICATE_PRIVATE_KEY" \
-            --create
           keychain add-certificates
           xcode-project use-profiles
+
       - name: Set build number
         script: |
+          set -e
           cd "$CM_BUILD_DIR"
           agvtool new-version -all "$BUILD_NUMBER"
+
+      - name: Verify signing identities
+        script: |
+          security find-identity -v -p codesigning
+
       - name: Build IPA
         script: |
+          set -e
+
           xcode-project build-ipa \
             --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
+
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
+
     publishing:
       email:
         recipients:
@@ -102,6 +129,7 @@ workflows:
         notify:
           success: true
           failure: true
+
       app_store_connect:
         auth: integration
         submit_to_testflight: true
