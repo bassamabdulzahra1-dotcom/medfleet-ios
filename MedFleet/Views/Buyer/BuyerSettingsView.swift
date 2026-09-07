@@ -11,10 +11,12 @@ struct BuyerSettingsView: View {
     @State private var error: String?
 
     private var roleLabel: String {
+        if tokenStore.user?.role == "buyer" {
+            return tokenStore.user?.appRole == "employee" ? "موظف (صيدلية)" : "مدير (صيدلية)"
+        }
         switch tokenStore.user?.role {
-        case "buyer": return "مشتري (صيدلية)"
         case "sales_rep": return "مندوب مبيعات"
-        case "admin": return "مدير"
+        case "admin": return "مشرف"
         default: return tokenStore.user?.role ?? "—"
         }
     }

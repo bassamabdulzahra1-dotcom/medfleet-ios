@@ -192,8 +192,8 @@ final class APIClient {
         )
     }
 
-    func buyerPosSessions() async throws -> [PosSession] {
-        let r: PosSessionListResponse = try await get("buyer/pos-sessions?limit=80")
+    func buyerPosSessions(month: String) async throws -> [PosSession] {
+        let r: PosSessionListResponse = try await get("buyer/pos-sessions?limit=200&month=\(month)")
         return r.data
     }
 

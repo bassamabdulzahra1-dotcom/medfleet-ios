@@ -83,7 +83,11 @@ struct RootView: View {
                 BuyerHomeView()
                     .onAppear {
                         appState.setup(tokenStore: tokenStore)
-                        posMonitor.start(appState: appState)
+                        if tokenStore.user?.canSeePos == true {
+                            posMonitor.start(appState: appState)
+                        } else {
+                            posMonitor.stop()
+                        }
                     }
             } else {
                 LoginView()

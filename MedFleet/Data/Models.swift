@@ -29,6 +29,23 @@ struct User: Codable, Equatable {
     let email: String
     let name: String
     let role: String
+    let appRole: String
+
+    var canSeePos: Bool { role == "buyer" && appRole != "employee" }
+
+    enum CodingKeys: String, CodingKey {
+        case id, email, name, role
+        case appRole = "app_role"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        email = try c.decode(String.self, forKey: .email)
+        name = try c.decode(String.self, forKey: .name)
+        role = try c.decode(String.self, forKey: .role)
+        appRole = (try? c.decodeIfPresent(String.self, forKey: .appRole)) ?? "manager"
+    }
 }
 
 struct Pharmacy: Identifiable, Decodable {

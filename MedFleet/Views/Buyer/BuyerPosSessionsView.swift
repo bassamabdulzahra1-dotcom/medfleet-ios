@@ -6,13 +6,46 @@ struct BuyerPosSessionsView: View {
 
     @State private var sessions: [PosSession] = []
     @State private var current: PosSession?
+    @State private var selectedMonth = Date()
+    @State private var showMonthPicker = false
     @State private var loading = true
     @State private var error: String?
+
+    private let baghdadTZ = TimeZone(identifier: "Asia/Baghdad") ?? .current
+
+    private var monthCalendar: Calendar {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = baghdadTZ
+        return c
+    }
+
+    private var monthKey: String {
+        String(format: "%04d-%02d", monthCalendar.component(.year, from: selectedMonth), monthCalendar.component(.month, from: selectedMonth))
+    }
+
+    private var monthTitle: String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ar_IQ")
+        f.timeZone = baghdadTZ
+        f.dateFormat = "MMMM yyyy"
+        return f.string(from: selectedMonth)
+    }
+
+    private var canGoNextMonth: Bool {
+        guard let next = monthCalendar.date(byAdding: .month, value: 1, to: selectedMonth) else { return false }
+        return monthCalendar.compare(next, to: Date(), toGranularity: .month) != .orderedDescending
+    }
+
+    private var liveThisMonth: PosSession? {
+        guard let current else { return nil }
+        return sessionInSelectedMonth(current) ? current : nil
+    }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 header
+                monthBar
                 if let error {
                     Text(error)
                         .font(.caption)
@@ -28,12 +61,19 @@ struct BuyerPosSessionsView: View {
                     ScrollView {
                         VStack(alignment: .trailing, spacing: 12) {
                             totalsCard
-                            if let current {
-                                liveCard(current)
+                            if let liveThisMonth {
+                                liveCard(liveThisMonth)
                             }
                             ForEach(sessions.filter { !$0.isOpen }) { s in
                                 NavigationLink(value: s.id) { sessionRow(s) }
                                     .buttonStyle(.plain)
+                            }
+                            if !loading && sessions.filter({ !$0.isOpen }).isEmpty && liveThisMonth == nil {
+                                Text("لا توجد جلسات في \(monthTitle)")
+                                    .font(.caption)
+                                    .foregroundStyle(MFColors.muted)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.top, 24)
                             }
                         }
                         .padding(.horizontal, 16)
@@ -48,8 +88,11 @@ struct BuyerPosSessionsView: View {
                 BuyerPosSessionDetailView(sessionId: id)
                     .toolbar(.hidden, for: .navigationBar)
             }
-            .task { await load() }
+            .task(id: monthKey) { await load() }
             .refreshable { await load() }
+            .sheet(isPresented: $showMonthPicker) {
+                monthPickerSheet
+            }
         }
     }
 
@@ -78,6 +121,65 @@ struct BuyerPosSessionsView: View {
         .padding(.top, 6)
     }
 
+    private var monthBar: some View {
+        HStack(spacing: 10) {
+            Button { shiftMonth(-1) } label: {
+                Image(systemName: "chevron.right")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(MFColors.navy)
+                    .frame(width: 36, height: 36)
+                    .background(Color.white)
+                    .clipShape(Circle())
+            }
+            Button { showMonthPicker = true } label: {
+                VStack(spacing: 2) {
+                    Text(monthTitle)
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(MFColors.navy)
+                    Text("اضغط لاختيار الشهر")
+                        .font(.caption2)
+                        .foregroundStyle(MFColors.muted)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(Color.white)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .buttonStyle(.plain)
+            Button { shiftMonth(1) } label: {
+                Image(systemName: "chevron.left")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(canGoNextMonth ? MFColors.navy : MFColors.muted.opacity(0.45))
+                    .frame(width: 36, height: 36)
+                    .background(Color.white)
+                    .clipShape(Circle())
+            }
+            .disabled(!canGoNextMonth)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 10)
+    }
+
+    private var monthPickerSheet: some View {
+        NavigationStack {
+            DatePicker("الشهر", selection: $selectedMonth, in: ...Date(), displayedComponents: [.date])
+                .datePickerStyle(.graphical)
+                .environment(\.locale, Locale(identifier: "ar_IQ"))
+                .environment(\.calendar, monthCalendar)
+                .environment(\.timeZone, baghdadTZ)
+                .padding()
+                .navigationTitle("اختيار الشهر")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("تم") { showMonthPicker = false }
+                    }
+                }
+        }
+        .presentationDetents([.medium])
+        .environment(\.layoutDirection, .rightToLeft)
+    }
+
     private var closedSessions: [PosSession] { sessions.filter { !$0.isOpen } }
 
     private var totalsCard: some View {
@@ -86,7 +188,7 @@ struct BuyerPosSessionsView: View {
         let pos = closedSessions.reduce(0.0) { $0 + $1.posSalesTotal }
         let total = closedSessions.reduce(0.0) { $0 + $1.totalSales }
         return VStack(alignment: .trailing, spacing: 10) {
-            Text("ملخص الجلسات المغلقة")
+            Text("ملخص \(monthTitle)")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(MFColors.navy)
             HStack {
@@ -183,14 +285,25 @@ struct BuyerPosSessionsView: View {
         loading = true
         error = nil
         do {
-            async let list = api.buyerPosSessions()
+            async let list = api.buyerPosSessions(month: monthKey)
             async let cur = api.buyerPosSessionCurrent()
-            sessions = try await list
+            sessions = try await list.filter { sessionInSelectedMonth($0) }
             current = try await cur
         } catch {
             self.error = "تعذّر تحميل جلسات نقطة البيع"
         }
         loading = false
+    }
+
+    private func shiftMonth(_ delta: Int) {
+        guard let next = monthCalendar.date(byAdding: .month, value: delta, to: selectedMonth) else { return }
+        if delta > 0 && monthCalendar.compare(next, to: Date(), toGranularity: .month) == .orderedDescending { return }
+        selectedMonth = next
+    }
+
+    private func sessionInSelectedMonth(_ s: PosSession) -> Bool {
+        guard let raw = s.openedAt, let date = parseSessionDate(raw) else { return false }
+        return monthCalendar.isDate(date, equalTo: selectedMonth, toGranularity: .month)
     }
 }
 
@@ -335,12 +448,15 @@ struct BuyerPosSessionDetailView: View {
     }
 }
 
-func fmtWhen(_ raw: String?) -> String {
-    guard let raw, !raw.isEmpty else { return "—" }
+func parseSessionDate(_ raw: String) -> Date? {
     let iso = ISO8601DateFormatter()
     iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    let d = iso.date(from: raw) ?? ISO8601DateFormatter().date(from: raw)
-    guard let d else { return String(raw.prefix(16)).replacingOccurrences(of: "T", with: " ") }
+    return iso.date(from: raw) ?? ISO8601DateFormatter().date(from: raw)
+}
+
+func fmtWhen(_ raw: String?) -> String {
+    guard let raw, !raw.isEmpty else { return "—" }
+    guard let d = parseSessionDate(raw) else { return String(raw.prefix(16)).replacingOccurrences(of: "T", with: " ") }
     let f = DateFormatter()
     f.locale = Locale(identifier: "ar")
     f.dateFormat = "d MMM، h:mm a"

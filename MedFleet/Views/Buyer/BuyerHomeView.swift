@@ -33,7 +33,7 @@ struct BuyerHomeView: View {
                         Text(displayName)
                             .font(.title3.bold())
                             .foregroundStyle(MFColors.navy)
-                        Text("لوحة المشتري")
+                        Text(tokenStore.user?.canSeePos == true ? "لوحة المدير" : "لوحة الموظف")
                             .font(.caption)
                             .foregroundStyle(MFColors.accentDark)
                     }
@@ -70,13 +70,15 @@ struct BuyerHomeView: View {
                         bg: MFColors.accentSoft
                     ) { path.append(BuyerRoute.inventoryAudit) }
 
-                    moduleCard(
-                        title: "جلسات نقطة البيع",
-                        subtitle: "تقارير الجلسات والمبيعات مع إشعار الفتح والإغلاق",
-                        icon: "clock.badge.checkmark.fill",
-                        tint: MFColors.ok,
-                        bg: MFColors.accentSoft
-                    ) { path.append(BuyerRoute.posSessions) }
+                    if tokenStore.user?.canSeePos == true {
+                        moduleCard(
+                            title: "جلسات نقطة البيع",
+                            subtitle: "تقارير الجلسات والمبيعات مع إشعار الفتح والإغلاق",
+                            icon: "clock.badge.checkmark.fill",
+                            tint: MFColors.ok,
+                            bg: MFColors.accentSoft
+                        ) { path.append(BuyerRoute.posSessions) }
+                    }
 
                     moduleCard(
                         title: "الإعدادات",
