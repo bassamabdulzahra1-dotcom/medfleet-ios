@@ -192,6 +192,27 @@ final class APIClient {
         )
     }
 
+    func buyerPosSessions() async throws -> [PosSession] {
+        let r: PosSessionListResponse = try await get("buyer/pos-sessions?limit=80")
+        return r.data
+    }
+
+    func buyerPosSessionCurrent() async throws -> PosSession? {
+        let r: PosSessionCurrentResponse = try await get("buyer/pos-sessions/current")
+        return r.data
+    }
+
+    func buyerPosSession(id: String) async throws -> PosSession {
+        let r: PosSessionDetailResponse = try await get("buyer/pos-sessions/\(id)")
+        return r.data
+    }
+
+    func buyerPosSessionEvents(after: String) async throws -> [PosSessionEvent] {
+        let enc = after.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? after
+        let r: PosSessionEventsResponse = try await get("buyer/pos-sessions/events?after=\(enc)")
+        return r.data
+    }
+
     // MARK: - HTTP core
 
     private struct EmptyResponse: Decodable {}

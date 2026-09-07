@@ -316,3 +316,127 @@ private extension BuyerInventoryAuditCommitResult {
         self.totalDiffValue = totalDiffValue
     }
 }
+
+// MARK: - POS sessions (تقارير جلسات نقطة البيع)
+
+struct PosSessionInvoiceLine: Identifiable, Decodable {
+    var id: String { "\(productName)-\(qty)-\(subtotal)" }
+    let productName: String
+    let qty: Double
+    let unitPrice: Double
+    let subtotal: Double
+
+    enum CodingKeys: String, CodingKey {
+        case qty
+        case productName = "product_name"
+        case unitPrice = "unit_price"
+        case subtotal
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        productName = (try? c.decodeIfPresent(String.self, forKey: .productName)) ?? "—"
+        qty = c.flexibleDouble(.qty) ?? 0
+        unitPrice = c.flexibleDouble(.unitPrice) ?? 0
+        subtotal = c.flexibleDouble(.subtotal) ?? 0
+    }
+}
+
+struct PosSessionInvoice: Identifiable, Decodable {
+    let id: String
+    let ref: String?
+    let createdAt: String?
+    let amountTotal: Double
+    let customerName: String?
+    let lines: [PosSessionInvoiceLine]
+
+    enum CodingKeys: String, CodingKey {
+        case id, ref, lines
+        case createdAt = "created_at"
+        case amountTotal = "amount_total"
+        case customerName = "customer_name"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        ref = try? c.decodeIfPresent(String.self, forKey: .ref)
+        createdAt = try? c.decodeIfPresent(String.self, forKey: .createdAt)
+        amountTotal = c.flexibleDouble(.amountTotal) ?? 0
+        customerName = try? c.decodeIfPresent(String.self, forKey: .customerName)
+        lines = (try? c.decodeIfPresent([PosSessionInvoiceLine].self, forKey: .lines)) ?? []
+    }
+}
+
+struct PosSession: Identifiable, Decodable, Hashable {
+    let id: String
+    let openedBy: String?
+    let closedBy: String?
+    let openedAt: String?
+    let closedAt: String?
+    let invoiceCount: Int
+    let posSalesTotal: Double
+    let outsideSales: Double
+    let totalSales: Double
+    let isOpen: Bool
+    let invoices: [PosSessionInvoice]
+
+    enum CodingKeys: String, CodingKey {
+        case id, invoices
+        case openedBy = "opened_by"
+        case closedBy = "closed_by"
+        case openedAt = "opened_at"
+        case closedAt = "closed_at"
+        case invoiceCount = "invoice_count"
+        case posSalesTotal = "pos_sales_total"
+        case outsideSales = "outside_sales"
+        case totalSales = "total_sales"
+        case isOpen = "is_open"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        openedBy = try? c.decodeIfPresent(String.self, forKey: .openedBy)
+        closedBy = try? c.decodeIfPresent(String.self, forKey: .closedBy)
+        openedAt = try? c.decodeIfPresent(String.self, forKey: .openedAt)
+        closedAt = try? c.decodeIfPresent(String.self, forKey: .closedAt)
+        invoiceCount = (try? c.decodeIfPresent(Int.self, forKey: .invoiceCount)) ?? 0
+        posSalesTotal = c.flexibleDouble(.posSalesTotal) ?? 0
+        outsideSales = c.flexibleDouble(.outsideSales) ?? 0
+        totalSales = c.flexibleDouble(.totalSales) ?? 0
+        isOpen = (try? c.decodeIfPresent(Bool.self, forKey: .isOpen)) ?? (closedAt == nil)
+        invoices = (try? c.decodeIfPresent([PosSessionInvoice].self, forKey: .invoices)) ?? []
+    }
+
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+    static func == (lhs: PosSession, rhs: PosSession) -> Bool { lhs.id == rhs.id }
+}
+
+struct PosSessionListResponse: Decodable { let data: [PosSession] }
+struct PosSessionDetailResponse: Decodable { let data: PosSession }
+struct PosSessionCurrentResponse: Decodable { let data: PosSession? }
+
+struct PosSessionEvent: Decodable {
+    let type: String
+    let sessionId: String
+    let cashier: String?
+    let at: String?
+    let amount: Double
+
+    enum CodingKeys: String, CodingKey {
+        case type, cashier, at, amount
+        case sessionId = "session_id"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        type = (try? c.decodeIfPresent(String.self, forKey: .type)) ?? ""
+        sessionId = (try? c.decodeIfPresent(String.self, forKey: .sessionId)) ?? ""
+        cashier = try? c.decodeIfPresent(String.self, forKey: .cashier)
+        at = try? c.decodeIfPresent(String.self, forKey: .at)
+        amount = c.flexibleDouble(.amount) ?? 0
+    }
+}
+
+struct PosSessionEventsResponse: Decodable { let data: [PosSessionEvent] }

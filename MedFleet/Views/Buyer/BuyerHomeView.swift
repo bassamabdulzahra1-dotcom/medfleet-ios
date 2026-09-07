@@ -4,6 +4,7 @@ enum BuyerRoute: Hashable {
     case scan
     case inventory
     case inventoryAudit
+    case posSessions
     case settings
 }
 
@@ -70,6 +71,14 @@ struct BuyerHomeView: View {
                     ) { path.append(BuyerRoute.inventoryAudit) }
 
                     moduleCard(
+                        title: "جلسات نقطة البيع",
+                        subtitle: "تقارير الجلسات والمبيعات مع إشعار الفتح والإغلاق",
+                        icon: "clock.badge.checkmark.fill",
+                        tint: MFColors.ok,
+                        bg: MFColors.accentSoft
+                    ) { path.append(BuyerRoute.posSessions) }
+
+                    moduleCard(
                         title: "الإعدادات",
                         subtitle: "بيانات الحساب وسياسة الخصوصية وحذف الحساب",
                         icon: "gearshape.fill",
@@ -87,6 +96,7 @@ struct BuyerHomeView: View {
                     case .scan: BuyerScanView()
                     case .inventory: BuyerInventoryView()
                     case .inventoryAudit: BuyerInventoryAuditView()
+                    case .posSessions: BuyerPosSessionsView()
                     case .settings: BuyerSettingsView()
                     }
                 }

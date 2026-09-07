@@ -5,6 +5,7 @@ struct MedFleetApp: App {
     @StateObject private var tokenStore = TokenStore()
     @StateObject private var appState = AppState()
     @StateObject private var connectivity = Connectivity()
+    @StateObject private var posMonitor = PosSessionMonitor()
 
     var body: some Scene {
         WindowGroup {
@@ -12,6 +13,7 @@ struct MedFleetApp: App {
                 .environmentObject(tokenStore)
                 .environmentObject(appState)
                 .environmentObject(connectivity)
+                .environmentObject(posMonitor)
                 .environment(\.layoutDirection, .rightToLeft)
                 .tint(MFColors.gold)
         }
@@ -66,6 +68,7 @@ enum AppRoute: Hashable {
 struct RootView: View {
     @EnvironmentObject var tokenStore: TokenStore
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var posMonitor: PosSessionMonitor
     @State private var showSplash = true
 
     var body: some View {
@@ -78,6 +81,10 @@ struct RootView: View {
                 }
             } else if tokenStore.isLoggedIn, tokenStore.user?.role == "buyer" {
                 BuyerHomeView()
+                    .onAppear {
+                        appState.setup(tokenStore: tokenStore)
+                        posMonitor.start(appState: appState)
+                    }
             } else {
                 LoginView()
                     .onAppear {
