@@ -1,21 +1,24 @@
 import SwiftUI
 
 enum MFColors {
-    static let navy = Color(red: 0.04, green: 0.31, blue: 0.35)
-    static let navy2 = Color(red: 0.03, green: 0.44, blue: 0.50)
-    static let gold = Color(red: 0.05, green: 0.69, blue: 0.78)
-    static let goldDark = Color(red: 0.02, green: 0.52, blue: 0.60)
-    static let cream = Color(red: 0.98, green: 0.99, blue: 1.00)
-    static let danger = Color(red: 0.72, green: 0.36, blue: 0.33)
-    static let ok = Color(red: 0.04, green: 0.62, blue: 0.70)
-    static let muted = Color(red: 0.42, green: 0.50, blue: 0.52)
-    static let bgTop = Color(red: 0.99, green: 1.00, blue: 1.00)
-    static let bgBottom = Color(red: 0.95, green: 0.99, blue: 1.00)
-    static let surface = Color.white
-    static let surfaceSoft = Color(red: 0.94, green: 0.99, blue: 1.00)
+    static let navy = Color(red: 243/255, green: 244/255, blue: 246/255)
+    static let navy2 = Color(red: 148/255, green: 163/255, blue: 184/255)
+    static let gold = Color(red: 203/255, green: 213/255, blue: 225/255)
+    static let goldDark = Color(red: 148/255, green: 163/255, blue: 184/255)
+    static let cream = Color(red: 20/255, green: 22/255, blue: 24/255)
+    static let danger = Color(red: 248/255, green: 113/255, blue: 113/255)
+    static let ok = Color(red: 148/255, green: 163/255, blue: 184/255)
+    static let muted = Color(red: 156/255, green: 163/255, blue: 175/255)
+    static let bgTop = Color(red: 20/255, green: 22/255, blue: 24/255)
+    static let bgBottom = Color(red: 13/255, green: 15/255, blue: 17/255)
+    static let surface = Color(red: 26/255, green: 28/255, blue: 32/255)
+    static let surfaceSoft = Color(red: 34/255, green: 38/255, blue: 43/255)
     static let accent = gold
     static let accentDark = goldDark
-    static let accentSoft = Color(red: 0.88, green: 0.97, blue: 0.99)
+    static let accentSoft = Color(red: 17/255, green: 19/255, blue: 21/255)
+    static let ink = Color(red: 20/255, green: 22/255, blue: 24/255)
+    static let button = Color(red: 42/255, green: 46/255, blue: 53/255)
+    static let buttonDark = Color(red: 26/255, green: 28/255, blue: 35/255)
 }
 
 enum MFFormat {
@@ -78,7 +81,11 @@ struct ModuleBackground: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(
-                LinearGradient(colors: [MFColors.bgTop, MFColors.bgBottom], startPoint: .top, endPoint: .bottom)
+                LinearGradient(
+                    colors: [MFColors.bgTop, MFColors.surfaceSoft, MFColors.bgBottom],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
                     .ignoresSafeArea()
             )
     }
@@ -90,11 +97,12 @@ struct BackButton: View {
         Button(action: action) {
             Image(systemName: "chevron.right")
                 .font(.body.weight(.semibold))
-                .foregroundStyle(MFColors.navy)
+                .foregroundStyle(MFColors.gold)
                 .frame(width: 44, height: 44)
-                .background(Color.white)
+                .background(MFColors.surface)
                 .clipShape(Circle())
-                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+                .overlay(Circle().stroke(MFColors.gold.opacity(0.12), lineWidth: 1))
+                .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
         }
     }
 }

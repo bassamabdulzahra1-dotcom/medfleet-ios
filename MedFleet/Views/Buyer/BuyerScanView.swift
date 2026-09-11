@@ -61,15 +61,7 @@ struct BuyerScanView: View {
 
     private var header: some View {
         HStack {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.right")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(MFColors.navy)
-                    .frame(width: 40, height: 40)
-                    .background(Color.white)
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
-            }
+            BackButton { dismiss() }
             Spacer()
             Text("ماسحة الفاتورة")
                 .font(.headline)
@@ -127,7 +119,7 @@ struct BuyerScanView: View {
                     Task { await runPreview() }
                 } label: {
                     HStack {
-                        if loadingPreview { ProgressView().tint(MFColors.navy) }
+                        if loadingPreview { ProgressView().tint(MFColors.gold) }
                         Text(loadingPreview
                              ? "جاري القراءة…"
                              : (pages.count > 1 ? "قراءة الفاتورة (\(pages.count) صفحات)" : "قراءة الفاتورة"))
@@ -135,8 +127,9 @@ struct BuyerScanView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 13)
-                    .background(LinearGradient(colors: [MFColors.accent, MFColors.accentDark], startPoint: .top, endPoint: .bottom))
-                    .foregroundStyle(.white)
+                    .background(LinearGradient(colors: [MFColors.button, MFColors.buttonDark], startPoint: .top, endPoint: .bottom))
+                    .foregroundStyle(MFColors.gold)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(MFColors.gold.opacity(0.14), lineWidth: 1))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .disabled(loadingPreview)
@@ -144,7 +137,7 @@ struct BuyerScanView: View {
             }
         }
         .padding(16)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
     }
@@ -156,12 +149,12 @@ struct BuyerScanView: View {
                 .scaledToFill()
                 .frame(width: 92, height: 120)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(MFColors.navy.opacity(0.12), lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(MFColors.gold.opacity(0.18), lineWidth: 1))
             Text("\(index + 1)")
                 .font(.caption2.weight(.bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(MFColors.gold)
                 .padding(.horizontal, 7).padding(.vertical, 3)
-                .background(MFColors.navy.opacity(0.85))
+                .background(MFColors.ink.opacity(0.85))
                 .clipShape(Capsule())
                 .padding(5)
             Button {
@@ -199,14 +192,15 @@ struct BuyerScanView: View {
                 Task { await runCommit(p) }
             } label: {
                 HStack {
-                    if committing { ProgressView().tint(.white) }
+                    if committing { ProgressView().tint(MFColors.gold) }
                     Text(committing ? "جاري الحفظ…" : "اعتماد كمسوّدة شراء")
                         .fontWeight(.bold)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 13)
-                .background(LinearGradient(colors: [MFColors.accent, MFColors.accentDark], startPoint: .top, endPoint: .bottom))
-                .foregroundStyle(.white)
+                .background(LinearGradient(colors: [MFColors.button, MFColors.buttonDark], startPoint: .top, endPoint: .bottom))
+                .foregroundStyle(MFColors.gold)
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(MFColors.gold.opacity(0.14), lineWidth: 1))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .disabled(committing)
@@ -214,7 +208,7 @@ struct BuyerScanView: View {
             .padding(.top, 4)
         }
         .padding(16)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
     }
@@ -244,14 +238,15 @@ struct BuyerScanView: View {
                     .fontWeight(.bold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 13)
-                    .background(LinearGradient(colors: [MFColors.gold, MFColors.goldDark], startPoint: .top, endPoint: .bottom))
-                    .foregroundStyle(MFColors.navy)
+                    .background(LinearGradient(colors: [MFColors.button, MFColors.buttonDark], startPoint: .top, endPoint: .bottom))
+                    .foregroundStyle(MFColors.gold)
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(MFColors.gold.opacity(0.14), lineWidth: 1))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .padding(.top, 4)
         }
         .padding(16)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
     }
@@ -299,7 +294,7 @@ struct BuyerScanView: View {
             }
         }
         .padding(12)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.04), radius: 3, y: 1)
     }
@@ -384,12 +379,12 @@ struct BuyerScanView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(filled ? MFColors.navy : Color.white)
-            .foregroundStyle(filled ? .white : MFColors.navy)
+            .background(filled ? MFColors.button : MFColors.surface)
+            .foregroundStyle(filled ? MFColors.gold : MFColors.navy)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(MFColors.navy.opacity(filled ? 0 : 0.25), lineWidth: 1)
+                    .stroke(MFColors.gold.opacity(filled ? 0.14 : 0.18), lineWidth: 1)
             )
         }
     }

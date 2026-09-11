@@ -9,10 +9,14 @@ struct OfflineBanner: View {
                 .font(.caption.weight(.medium))
             Spacer()
         }
-        .foregroundStyle(MFColors.navy)
+        .foregroundStyle(MFColors.gold)
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity)
-        .background(MFColors.accentSoft)
+        .background(MFColors.surface)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(MFColors.gold.opacity(0.12), lineWidth: 1)
+        )
     }
 }

@@ -98,15 +98,7 @@ struct BuyerPosSessionsView: View {
 
     private var header: some View {
         HStack {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.right")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(MFColors.navy)
-                    .frame(width: 40, height: 40)
-                    .background(Color.white)
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
-            }
+            BackButton { dismiss() }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
                 Text("جلسات نقطة البيع")
@@ -128,8 +120,9 @@ struct BuyerPosSessionsView: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(MFColors.navy)
                     .frame(width: 36, height: 36)
-                    .background(Color.white)
+                    .background(MFColors.surface)
                     .clipShape(Circle())
+                    .overlay(Circle().stroke(MFColors.gold.opacity(0.12), lineWidth: 1))
             }
             Button { showMonthPicker = true } label: {
                 VStack(spacing: 2) {
@@ -142,8 +135,9 @@ struct BuyerPosSessionsView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
-                .background(Color.white)
+                .background(MFColors.surface)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(MFColors.gold.opacity(0.12), lineWidth: 1))
             }
             .buttonStyle(.plain)
             Button { shiftMonth(1) } label: {
@@ -151,8 +145,9 @@ struct BuyerPosSessionsView: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(canGoNextMonth ? MFColors.navy : MFColors.muted.opacity(0.45))
                     .frame(width: 36, height: 36)
-                    .background(Color.white)
+                    .background(MFColors.surface)
                     .clipShape(Circle())
+                    .overlay(Circle().stroke(MFColors.gold.opacity(0.12), lineWidth: 1))
             }
             .disabled(!canGoNextMonth)
         }
@@ -199,7 +194,7 @@ struct BuyerPosSessionsView: View {
             }
         }
         .padding(14)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .shadow(color: .black.opacity(0.04), radius: 3, y: 1)
     }
@@ -210,10 +205,10 @@ struct BuyerPosSessionsView: View {
                 HStack {
                     Text("مفتوحة الآن")
                         .font(.caption.bold())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(MFColors.ink)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(MFColors.ok)
+                        .background(MFColors.gold)
                         .clipShape(Capsule())
                     Spacer()
                     Text("جلسة حالية")
@@ -267,7 +262,7 @@ struct BuyerPosSessionsView: View {
             }
         }
         .padding(14)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .shadow(color: .black.opacity(0.04), radius: 3, y: 1)
     }
@@ -317,15 +312,7 @@ struct BuyerPosSessionDetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Button { dismiss() } label: {
-                    Image(systemName: "chevron.right")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(MFColors.navy)
-                        .frame(width: 40, height: 40)
-                        .background(Color.white)
-                        .clipShape(Circle())
-                        .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
-                }
+                BackButton { dismiss() }
                 Spacer()
                 Text("تفاصيل الجلسة")
                     .font(.headline)
@@ -369,10 +356,10 @@ struct BuyerPosSessionDetailView: View {
             HStack {
                 Text(s.isOpen ? "مفتوحة" : "مغلقة")
                     .font(.caption.bold())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(s.isOpen ? MFColors.ink : MFColors.gold)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(s.isOpen ? MFColors.ok : MFColors.navy)
+                    .background(s.isOpen ? MFColors.gold : MFColors.button)
                     .clipShape(Capsule())
                 Spacer()
                 Text("فتحها \(s.openedBy ?? "—")")
@@ -393,7 +380,7 @@ struct BuyerPosSessionDetailView: View {
             }
         }
         .padding(14)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
@@ -429,7 +416,7 @@ struct BuyerPosSessionDetailView: View {
             }
         }
         .padding(12)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 

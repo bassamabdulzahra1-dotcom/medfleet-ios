@@ -64,15 +64,7 @@ struct BuyerInventoryAuditView: View {
 
     private var header: some View {
         HStack {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.right")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(MFColors.navy)
-                    .frame(width: 40, height: 40)
-                    .background(Color.white)
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
-            }
+            BackButton { dismiss() }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
                 Text("الجرد المخزني")
@@ -102,20 +94,23 @@ struct BuyerInventoryAuditView: View {
                         .font(.subheadline.weight(.bold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 11)
-                        .background(LinearGradient(colors: [MFColors.accent, MFColors.accentDark], startPoint: .top, endPoint: .bottom))
-                        .foregroundStyle(.white)
+                        .background(LinearGradient(colors: [MFColors.button, MFColors.buttonDark], startPoint: .top, endPoint: .bottom))
+                        .foregroundStyle(MFColors.gold)
+                        .overlay(RoundedRectangle(cornerRadius: 11).stroke(MFColors.gold.opacity(0.14), lineWidth: 1))
                         .clipShape(RoundedRectangle(cornerRadius: 11))
                 }
 
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").foregroundStyle(MFColors.muted)
                     TextField("اكتب اسم المنتج أو الباركود", text: $query)
+                        .foregroundStyle(MFColors.navy)
+                        .tint(MFColors.gold)
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(Color.white)
+                .background(MFColors.surface)
                 .clipShape(RoundedRectangle(cornerRadius: 11))
                 .overlay(RoundedRectangle(cornerRadius: 11).stroke(MFColors.muted.opacity(0.25), lineWidth: 1))
             }
@@ -160,7 +155,7 @@ struct BuyerInventoryAuditView: View {
                         }
                     }
                     .padding(10)
-                    .background(Color.white)
+                    .background(MFColors.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
                 .buttonStyle(.plain)
@@ -179,10 +174,10 @@ struct BuyerInventoryAuditView: View {
             HStack {
                 Text("\(lines.count)")
                     .font(.caption.bold())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(MFColors.gold)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(MFColors.navy)
+                    .background(MFColors.button)
                     .clipShape(Capsule())
                 Text("أصناف مسجلة")
                     .font(.caption)
@@ -194,16 +189,18 @@ struct BuyerInventoryAuditView: View {
             }
 
             TextField("ملاحظة القيد المحاسبي (اختياري)", text: $note)
+                .foregroundStyle(MFColors.navy)
+                .tint(MFColors.gold)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(Color.white)
+                .background(MFColors.surface)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(MFColors.muted.opacity(0.22), lineWidth: 1))
         }
         .padding(14)
-        .background(Color.white.opacity(0.92))
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(.horizontal, 16)
         .padding(.top, 10)
@@ -241,14 +238,15 @@ struct BuyerInventoryAuditView: View {
             Task { await submitAudit() }
         } label: {
             HStack {
-                if saving { ProgressView().tint(.white) }
+                if saving { ProgressView().tint(MFColors.gold) }
                 Text(saving ? "جاري ترحيل الفرق..." : "ترحيل الفرق للحسابات")
                     .fontWeight(.bold)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 13)
-            .background(LinearGradient(colors: [MFColors.accent, MFColors.accentDark], startPoint: .top, endPoint: .bottom))
-            .foregroundStyle(.white)
+            .background(LinearGradient(colors: [MFColors.button, MFColors.buttonDark], startPoint: .top, endPoint: .bottom))
+            .foregroundStyle(MFColors.gold)
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(MFColors.gold.opacity(0.14), lineWidth: 1))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
@@ -303,9 +301,11 @@ struct BuyerInventoryAuditView: View {
                             TextField("0", text: line.packetQtyText)
                                 .keyboardType(.numberPad)
                                 .multilineTextAlignment(.center)
+                                .foregroundStyle(MFColors.navy)
+                                .tint(MFColors.gold)
                                 .padding(.vertical, 8)
                                 .padding(.horizontal, 6)
-                                .background(Color.white)
+                                .background(MFColors.surface)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(MFColors.muted.opacity(0.2), lineWidth: 1))
                         }
@@ -316,9 +316,11 @@ struct BuyerInventoryAuditView: View {
                             TextField("0", text: line.stripQtyText)
                                 .keyboardType(.numberPad)
                                 .multilineTextAlignment(.center)
+                                .foregroundStyle(MFColors.navy)
+                                .tint(MFColors.gold)
                                 .padding(.vertical, 8)
                                 .padding(.horizontal, 6)
-                                .background(Color.white)
+                                .background(MFColors.surface)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(MFColors.muted.opacity(0.2), lineWidth: 1))
                         }
@@ -348,7 +350,7 @@ struct BuyerInventoryAuditView: View {
             }
         }
         .padding(12)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.04), radius: 3, y: 1)
     }

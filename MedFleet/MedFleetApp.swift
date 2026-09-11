@@ -99,6 +99,7 @@ struct RootView: View {
                     }
             }
         }
+        .preferredColorScheme(.dark)
         .onAppear {
             appState.setup(tokenStore: tokenStore)
         }

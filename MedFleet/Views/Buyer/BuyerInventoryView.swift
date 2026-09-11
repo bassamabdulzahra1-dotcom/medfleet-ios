@@ -42,15 +42,7 @@ struct BuyerInventoryView: View {
 
     private var header: some View {
         HStack {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.right")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(MFColors.navy)
-                    .frame(width: 40, height: 40)
-                    .background(Color.white)
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
-            }
+            BackButton { dismiss() }
             Spacer()
             Text("المخزن")
                 .font(.headline)
@@ -64,12 +56,14 @@ struct BuyerInventoryView: View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass").foregroundStyle(MFColors.muted)
             TextField("ابحث بالاسم أو الباركود", text: $query)
+                .foregroundStyle(MFColors.navy)
+                .tint(MFColors.gold)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 11)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(MFColors.muted.opacity(0.25), lineWidth: 1))
         .padding(.horizontal, 16)
@@ -154,7 +148,7 @@ private struct InventoryRow: View {
             }
         }
         .padding(14)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.04), radius: 3, y: 1)
     }

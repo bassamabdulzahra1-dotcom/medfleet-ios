@@ -58,15 +58,7 @@ struct BuyerSettingsView: View {
 
     private var header: some View {
         HStack {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.right")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(MFColors.navy)
-                    .frame(width: 40, height: 40)
-                    .background(Color.white)
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
-            }
+            BackButton { dismiss() }
             Spacer()
             Text("الإعدادات")
                 .font(.headline)
@@ -91,7 +83,7 @@ struct BuyerSettingsView: View {
             infoRow(label: "نوع الحساب", value: roleLabel)
         }
         .padding(16)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
     }
@@ -139,7 +131,7 @@ struct BuyerSettingsView: View {
             }
         }
         .padding(16)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
     }
@@ -158,7 +150,7 @@ struct BuyerSettingsView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 13)
-            .background(Color.white)
+            .background(MFColors.surface)
             .foregroundStyle(MFColors.navy)
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(MFColors.accent.opacity(0.45), lineWidth: 1))
@@ -202,7 +194,7 @@ struct BuyerSettingsView: View {
             .opacity(deleting ? 0.6 : 1)
         }
         .padding(16)
-        .background(Color.white)
+        .background(MFColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(MFColors.danger.opacity(0.3), lineWidth: 1))
         .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
