@@ -148,7 +148,7 @@ struct BuyerInventoryAuditView: View {
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(MFColors.navy)
                                 .frame(maxWidth: .infinity, alignment: .trailing)
-                            Text("رصيد المخزن: \(MFFormat.money(item.qtyOnHand ?? 0))")
+                            Text(resultSubtitle(item))
                                 .font(.caption2)
                                 .foregroundStyle(MFColors.muted)
                                 .frame(maxWidth: .infinity, alignment: .trailing)
@@ -283,6 +283,40 @@ struct BuyerInventoryAuditView: View {
                             .font(.caption2)
                             .foregroundStyle(MFColors.muted)
                     }
+                }
+            }
+
+            HStack(spacing: 8) {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("الباتش")
+                        .font(.caption2)
+                        .foregroundStyle(MFColors.muted)
+                    TextField("أضف أو عدّل", text: line.batchText)
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                        .foregroundStyle(MFColors.navy)
+                        .tint(MFColors.gold)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 8)
+                        .background(MFColors.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(MFColors.muted.opacity(0.2), lineWidth: 1))
+                }
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("الانتهاء")
+                        .font(.caption2)
+                        .foregroundStyle(MFColors.muted)
+                    TextField("YYYY-MM-DD", text: line.expiryText)
+                        .keyboardType(.numbersAndPunctuation)
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                        .foregroundStyle(MFColors.navy)
+                        .tint(MFColors.gold)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 8)
+                        .background(MFColors.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(MFColors.muted.opacity(0.2), lineWidth: 1))
                 }
             }
 
@@ -466,7 +500,9 @@ struct BuyerInventoryAuditView: View {
                 currentQty: $0.currentQty,
                 diffQty: $0.diffQty,
                 unitCost: $0.unitCost,
-                diffValue: $0.diffValue
+                diffValue: $0.diffValue,
+                batchNumber: $0.batchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0.batchText.trimmingCharacters(in: .whitespacesAndNewlines),
+                expiryDate: $0.expiryText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0.expiryText.trimmingCharacters(in: .whitespacesAndNewlines)
             )
         }
 
@@ -492,6 +528,13 @@ struct BuyerInventoryAuditView: View {
         note = ""
         error = nil
     }
+
+    private func resultSubtitle(_ item: InventoryItem) -> String {
+        var parts = ["رصيد المخزن: \(MFFormat.money(item.qtyOnHand ?? 0))"]
+        if let b = item.batchNumber, !b.isEmpty { parts.append("باتش \(b)") }
+        if let e = item.expiryDate, !e.isEmpty { parts.append("انتهاء \(String(e.prefix(10)))") }
+        return parts.joined(separator: " · ")
+    }
 }
 
 private struct AuditLine: Identifiable {
@@ -499,9 +542,13 @@ private struct AuditLine: Identifiable {
     let item: InventoryItem
     var packetQtyText: String
     var stripQtyText: String
+    var batchText: String
+    var expiryText: String
 
     init(item: InventoryItem) {
         self.item = item
+        self.batchText = item.batchNumber ?? ""
+        self.expiryText = String((item.expiryDate ?? "").prefix(10))
         let stock = item.qtyOnHand ?? 0
         if let spp = item.stripsPerPacket, spp > 0 {
             let sppD = Double(spp)

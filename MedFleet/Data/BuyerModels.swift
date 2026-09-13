@@ -23,6 +23,8 @@ struct InventoryItem: Identifiable, Decodable {
     let standardCost: Double?
     let barcode: String?
     let stripsPerPacket: Int?
+    let batchNumber: String?
+    let expiryDate: String?
 
     enum CodingKeys: String, CodingKey {
         case id, name, category, barcode
@@ -31,6 +33,8 @@ struct InventoryItem: Identifiable, Decodable {
         case salePrice = "sale_price"
         case standardCost = "standard_cost"
         case stripsPerPacket = "strips_per_packet"
+        case batchNumber = "batch_number"
+        case expiryDate = "expiry_date"
     }
 
     init(from decoder: Decoder) throws {
@@ -44,6 +48,8 @@ struct InventoryItem: Identifiable, Decodable {
         standardCost = c.flexibleDouble(.standardCost)
         barcode = try? c.decodeIfPresent(String.self, forKey: .barcode)
         stripsPerPacket = try? c.decodeIfPresent(Int.self, forKey: .stripsPerPacket)
+        batchNumber = try? c.decodeIfPresent(String.self, forKey: .batchNumber)
+        expiryDate = try? c.decodeIfPresent(String.self, forKey: .expiryDate)
     }
 }
 
@@ -245,6 +251,8 @@ struct BuyerInventoryAuditLineInput: Encodable {
     let diffQty: Double
     let unitCost: Double
     let diffValue: Double
+    let batchNumber: String?
+    let expiryDate: String?
 
     enum CodingKeys: String, CodingKey {
         case barcode
@@ -255,6 +263,8 @@ struct BuyerInventoryAuditLineInput: Encodable {
         case diffQty = "diff_qty"
         case unitCost = "unit_cost"
         case diffValue = "diff_value"
+        case batchNumber = "batch_number"
+        case expiryDate = "expiry_date"
     }
 }
 
