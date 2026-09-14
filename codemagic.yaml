@@ -14,15 +14,19 @@ definitions:
       name: Generate Xcode project
       script: |
         set -e
+
         brew install xcodegen
         xcodegen generate
+
+        echo "================ PROJECT ================"
         ls -la "$XCODE_PROJECT"
+        echo "========================================="
 
 workflows:
 
-  # ------------------------------------------------------------
-  # 1) Simulator build
-  # ------------------------------------------------------------
+  # ============================================================
+  # 1) Simulator Build
+  # ============================================================
   ios-simulator:
     name: MedFleet — Simulator
     max_build_duration: 30
@@ -48,18 +52,23 @@ workflows:
           xcodebuild build \
             -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
             -scheme "$XCODE_SCHEME" \
+            -configuration Debug \
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            ENABLE_PREVIEWS=NO \
             2>&1 | tee /tmp/xcbuild.log
 
           status=${PIPESTATUS[0]}
 
-          echo "================ SWIFT ERRORS ================"
-          grep -nE "error:" /tmp/xcbuild.log || echo "No Swift errors found"
-          echo "=============================================="
+          if [ "$status" -ne 0 ]; then
+            echo "================ BUILD ERRORS ================"
+            grep -niE "error:|fatal error|BUILD FAILED" /tmp/xcbuild.log | tail -100 || true
+            echo "=============================================="
+          fi
 
-          exit $status
+          exit "$status"
 
     artifacts:
       - /tmp/xcodebuild_logs/*.log
@@ -72,9 +81,9 @@ workflows:
           success: true
           failure: true
 
-  # ------------------------------------------------------------
+  # ============================================================
   # 2) App Store / TestFlight IPA
-  # ------------------------------------------------------------
+  # ============================================================
   ios-ipa:
     name: MedFleet — IPA (App Store / TestFlight)
     max_build_duration: 60
@@ -103,127 +112,59 @@ workflows:
       - name: Configure code signing
         script: |
           set -e
+
+          echo "Initializing keychain..."
           keychain initialize
+
+          echo "Adding Apple Distribution certificate..."
           keychain add-certificates
 
-          echo "Enable Push Notifications on net.medfleet.rep"
-          BID=$(app-store-connect bundle-ids list \
-            --bundle-id-identifier "$BUNDLE_ID" \
-            --strict-match-identifier \
-            --json | python3 -c '
-          import json, sys
-          raw = json.load(sys.stdin)
-          items = raw if isinstance(raw, list) else raw.get("data") or raw.get("bundleIds") or []
-          for item in items:
-              if not isinstance(item, dict):
-                  continue
-              attrs = item.get("attributes") if isinstance(item.get("attributes"), dict) else item
-              ident = attrs.get("identifier") or item.get("identifier")
-              rid = item.get("id") or attrs.get("id")
-              if ident == "net.medfleet.rep" and rid:
-                  print(rid)
-                  raise SystemExit(0)
-          raise SystemExit("bundle id net.medfleet.rep not found")
-          ')
-          echo "Bundle ID resource: $BID"
-          if app-store-connect bundle-ids capabilities "$BID" | grep -qi "Push Notifications"; then
-            echo "Push Notifications already enabled"
-          else
-            app-store-connect bundle-ids enable-capabilities "$BID" --capability "Push Notifications"
-          fi
+          echo "Applying Codemagic provisioning profiles..."
+          xcode-project use-profiles \
+            --project "$CM_BUILD_DIR/$XCODE_PROJECT"
 
-          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "$PROFILES_DIR"
-
-          CERT_IDS=$(app-store-connect certificates list \
-            --type DISTRIBUTION \
-            --type IOS_DISTRIBUTION \
-            --json | python3 -c '
-          import json, sys
-          raw = json.load(sys.stdin)
-          items = raw if isinstance(raw, list) else raw.get("data") or raw.get("certificates") or []
-          ids = []
-          for item in items:
-              if not isinstance(item, dict):
-                  continue
-              rid = item.get("id") or (item.get("attributes") or {}).get("id")
-              if rid:
-                  ids.append(str(rid))
-          if not ids:
-              raise SystemExit("no Apple Distribution certificates found")
-          print(" ".join(ids))
-          ')
-          echo "Certificate IDs: $CERT_IDS"
-
-          # Create a fresh App Store profile with current App ID capabilities (Push).
-          # Do not use fetch-signing-files --create; that needs a certificate private key.
-          # shellcheck disable=SC2086
-          app-store-connect profiles create "$BID" \
-            --type IOS_APP_STORE \
-            --name "MedFleet_AppStore_${BUILD_NUMBER}" \
-            --certificate-ids $CERT_IDS \
-            --save \
-            --profiles-dir "$PROFILES_DIR"
-
-          for p in "$PROFILES_DIR"/*.mobileprovision; do
-            [ -f "$p" ] || continue
-            if ! security cms -D -i "$p" 2>/dev/null | grep -q "aps-environment"; then
-              echo "Removing profile without Push: $(basename "$p")"
-              rm -f "$p"
-            fi
-          done
-
-          xcode-project use-profiles --project "$CM_BUILD_DIR/$XCODE_PROJECT"
-          echo "================ PROFILE ENTITLEMENTS ================"
-          for p in "$PROFILES_DIR"/*.mobileprovision; do
-            [ -f "$p" ] || continue
-            echo "---- $(basename "$p") ----"
-            security cms -D -i "$p" 2>/dev/null | plutil -extract Name raw -o - - 2>/dev/null || true
-            security cms -D -i "$p" 2>/dev/null | plutil -extract Entitlements xml1 -o - - 2>/dev/null || true
-          done
-          echo "======================================================"
+          echo "================ SIGNING IDENTITIES ================"
+          security find-identity -v -p codesigning || true
+          echo "===================================================="
 
       - name: Set build number
         script: |
           set -e
+
           cd "$CM_BUILD_DIR"
+
+          echo "Setting build number to $BUILD_NUMBER"
           agvtool new-version -all "$BUILD_NUMBER"
 
-      - name: Apply MedFleet signing
+      - name: Verify signing settings
         script: |
           set -e
-          PROFILE_NAME="MedFleet_AppStore_${BUILD_NUMBER}"
-          python3 "$CM_BUILD_DIR/tools/patch_ios_signing.py" \
-            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
-            --profile-name "$PROFILE_NAME" \
-            --export-options "$CM_BUILD_DIR/export_options.plist"
+
           echo "================ TARGET SIGNING SETTINGS ================"
-          xcodebuild -project "$CM_BUILD_DIR/$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -showBuildSettings \
-            | grep -E "CODE_SIGN_|DEVELOPMENT_TEAM|PROVISIONING_PROFILE|PRODUCT_BUNDLE" || true
-          echo "======================================================"
 
-      - name: Verify signing identities
-        script: |
-          security find-identity -v -p codesigning
+          xcodebuild \
+            -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -showBuildSettings \
+            | grep -E \
+            "PRODUCT_BUNDLE_IDENTIFIER|DEVELOPMENT_TEAM|CODE_SIGN_STYLE|CODE_SIGN_IDENTITY|PROVISIONING_PROFILE|PROVISIONING_PROFILE_SPECIFIER" \
+            || true
 
-      - name: Build IPA
+          echo "========================================================="
+
+      - name: Archive MedFleet
         script: |
           set -euo pipefail
+
           ARCHIVE_PATH="$CM_BUILD_DIR/build/ios/xcarchive/MedFleet.xcarchive"
-          IPA_DIR="$CM_BUILD_DIR/build/ios/ipa"
-          mkdir -p "$(dirname "$ARCHIVE_PATH")" "$IPA_DIR"
 
-          EXPORT_PLIST="$CM_BUILD_DIR/export_options.plist"
-          if [ ! -f "$EXPORT_PLIST" ]; then
-            echo "export_options.plist missing after signing patch"
-            exit 1
-          fi
-          echo "Using export options: $EXPORT_PLIST"
-          cat "$EXPORT_PLIST"
+          mkdir -p "$(dirname "$ARCHIVE_PATH")"
 
-          # Do not pass CODE_SIGN_STYLE / profile flags here — xcode-project build-ipa
-          # applies them to Firebase SPM targets and the archive fails.
+          echo "Archiving MedFleet..."
+
           set +e
+
           xcodebuild archive \
             -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
             -scheme "$XCODE_SCHEME" \
@@ -233,31 +174,64 @@ workflows:
             COMPILER_INDEX_STORE_ENABLE=NO \
             ENABLE_PREVIEWS=NO \
             2>&1 | tee /tmp/xcarchive.log
+
           status=${PIPESTATUS[0]}
+
           set -e
 
           if [ "$status" -ne 0 ]; then
-            echo "================ SWIFT FILE ERRORS ================"
-            grep -E "\.swift:[0-9]+:[0-9]+: error:" /tmp/xcarchive.log || true
-            grep -niE "error:|❌|fatal error|CodeSign|Provisioning|entitlement" /tmp/xcarchive.log | tail -150 || true
-            echo "================ BEFORE ARCHIVE FAILED ================"
-            grep -nB 30 "ARCHIVE FAILED" /tmp/xcarchive.log | tail -80 || true
-            echo "================ LAST 80 LINES ================"
-            tail -80 /tmp/xcarchive.log || true
+
+            echo "================ ARCHIVE ERRORS ================"
+
+            grep -niE \
+            "error:|fatal error|CodeSign|Provisioning|certificate|entitlement|ARCHIVE FAILED" \
+            /tmp/xcarchive.log \
+            | tail -150 \
+            || true
+
+            echo "================ LAST 100 LINES ================"
+            tail -100 /tmp/xcarchive.log || true
+
             echo "================================================"
+
             exit "$status"
           fi
+
+          echo "Archive created successfully:"
+          ls -la "$ARCHIVE_PATH"
+
+      - name: Export IPA
+        script: |
+          set -euo pipefail
+
+          ARCHIVE_PATH="$CM_BUILD_DIR/build/ios/xcarchive/MedFleet.xcarchive"
+          IPA_DIR="$CM_BUILD_DIR/build/ios/ipa"
+          EXPORT_PLIST="$CM_BUILD_DIR/export_options.plist"
+
+          mkdir -p "$IPA_DIR"
+          cp "$CM_BUILD_DIR/configs/export_options.plist" "$EXPORT_PLIST"
+
+          echo "================ EXPORT OPTIONS ================"
+          cat "$EXPORT_PLIST"
+          echo "================================================"
 
           xcodebuild -exportArchive \
             -archivePath "$ARCHIVE_PATH" \
             -exportOptionsPlist "$EXPORT_PLIST" \
             -exportPath "$IPA_DIR" \
+            -allowProvisioningUpdates \
             2>&1 | tee /tmp/xcexport.log
-          ls -la "$IPA_DIR"
+
+          echo "================ IPA FILES ================"
+          ls -lah "$IPA_DIR"
+          echo "==========================================="
 
     artifacts:
       - build/ios/ipa/*.ipa
+      - build/ios/xcarchive/*.xcarchive
       - /tmp/xcodebuild_logs/*.log
+      - /tmp/xcarchive.log
+      - /tmp/xcexport.log
 
     publishing:
       email:
