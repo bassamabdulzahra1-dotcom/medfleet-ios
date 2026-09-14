@@ -136,6 +136,15 @@ workflows:
           echo "Setting build number to $BUILD_NUMBER"
           agvtool new-version -all "$BUILD_NUMBER"
 
+      - name: Lock Manual signing
+        script: |
+          set -e
+
+          echo "Locking Manual signing + App Store profile..."
+          python3 "$CM_BUILD_DIR/tools/codemagic_prepare_signing.py" \
+            "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            "$CM_BUILD_DIR/configs/export_options.plist"
+
       - name: Verify signing settings
         script: |
           set -e
@@ -163,6 +172,9 @@ workflows:
 
           echo "Archiving MedFleet..."
 
+          PROFILE_NAME="$(cat /tmp/cm_profile_name.txt)"
+          echo "PROVISIONING_PROFILE_SPECIFIER=$PROFILE_NAME"
+
           set +e
 
           xcodebuild archive \
@@ -173,6 +185,10 @@ workflows:
             -archivePath "$ARCHIVE_PATH" \
             COMPILER_INDEX_STORE_ENABLE=NO \
             ENABLE_PREVIEWS=NO \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM=DZW782KNRM \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             2>&1 | tee /tmp/xcarchive.log
 
           status=${PIPESTATUS[0]}
@@ -180,20 +196,10 @@ workflows:
           set -e
 
           if [ "$status" -ne 0 ]; then
-
-            echo "================ ARCHIVE ERRORS ================"
-
-            grep -niE \
-            "error:|fatal error|CodeSign|Provisioning|certificate|entitlement|ARCHIVE FAILED" \
-            /tmp/xcarchive.log \
-            | tail -150 \
-            || true
-
-            echo "================ LAST 100 LINES ================"
-            tail -100 /tmp/xcarchive.log || true
-
+            python3 "$CM_BUILD_DIR/tools/print_xcode_errors.py" /tmp/xcarchive.log
+            echo "================ LAST 40 LINES ================"
+            tail -40 /tmp/xcarchive.log || true
             echo "================================================"
-
             exit "$status"
           fi
 
@@ -219,7 +225,6 @@ workflows:
             -archivePath "$ARCHIVE_PATH" \
             -exportOptionsPlist "$EXPORT_PLIST" \
             -exportPath "$IPA_DIR" \
-            -allowProvisioningUpdates \
             2>&1 | tee /tmp/xcexport.log
 
           echo "================ IPA FILES ================"
