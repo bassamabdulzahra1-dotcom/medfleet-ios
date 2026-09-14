@@ -1,6 +1,7 @@
 import Foundation
 import FirebaseMessaging
 
+@MainActor
 enum PushRegistrar {
     static func sync(api: APIClient?, tokenStore: TokenStore?) {
         guard tokenStore?.user?.canSeePos == true else { return }
