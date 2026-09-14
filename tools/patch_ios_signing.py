@@ -22,7 +22,6 @@ def patch_settings(inner: str, profile_name: str) -> str:
     }
     lines = inner.splitlines()
     kept: list[str] = []
-    seen: set[str] = set()
     skip_keys = {
         "CODE_SIGN_STYLE",
         "CODE_SIGN_IDENTITY",
@@ -36,7 +35,7 @@ def patch_settings(inner: str, profile_name: str) -> str:
     for line in lines:
         stripped = line.strip()
         key = stripped.split(" = ", 1)[0] if " = " in stripped else ""
-        if key in skip_keys:
+        if key in skip_keys or "PROVISIONING_PROFILE" in key:
             continue
         kept.append(line)
     indent = "				"
@@ -45,11 +44,23 @@ def patch_settings(inner: str, profile_name: str) -> str:
     return "\n" + body + "\n			"
 
 
+def strip_shared_profile(inner: str) -> str:
+    """SPM/Firebase cannot use the app's provisioning profile."""
+    kept: list[str] = []
+    for line in inner.splitlines():
+        key = line.strip().split(" = ", 1)[0] if " = " in line.strip() else ""
+        if "PROVISIONING_PROFILE" in key:
+            continue
+        kept.append(line)
+    return "\n".join(kept) + ("\n" if kept else "")
+
+
 def patch_pbxproj(text: str, profile_name: str) -> str:
     token = "buildSettings = {"
     out: list[str] = []
     idx = 0
     patched = 0
+    stripped = 0
     while True:
         start = text.find(token, idx)
         if start < 0:
@@ -69,11 +80,16 @@ def patch_pbxproj(text: str, profile_name: str) -> str:
         if f"PRODUCT_BUNDLE_IDENTIFIER = {BUNDLE_ID}" in inner:
             block = token + patch_settings(inner, profile_name) + "}"
             patched += 1
+        else:
+            cleaned = strip_shared_profile(inner)
+            if cleaned != inner:
+                stripped += 1
+            block = token + cleaned + "}"
         out.append(block)
         idx = i
     if patched == 0:
         raise SystemExit("no MedFleet buildSettings block found in pbxproj")
-    print(f"patched {patched} MedFleet buildSettings blocks")
+    print(f"patched {patched} MedFleet buildSettings blocks, stripped profile from {stripped} other blocks")
     return "".join(out)
 
 

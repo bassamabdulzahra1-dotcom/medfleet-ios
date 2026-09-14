@@ -172,8 +172,7 @@ workflows:
 
           echo "Archiving MedFleet..."
 
-          PROFILE_NAME="$(cat /tmp/cm_profile_name.txt)"
-          echo "PROVISIONING_PROFILE_SPECIFIER=$PROFILE_NAME"
+          echo "App profile (target only): $(cat /tmp/cm_profile_name.txt)"
 
           set +e
 
@@ -185,10 +184,6 @@ workflows:
             -archivePath "$ARCHIVE_PATH" \
             COMPILER_INDEX_STORE_ENABLE=NO \
             ENABLE_PREVIEWS=NO \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            DEVELOPMENT_TEAM=DZW782KNRM \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             2>&1 | tee /tmp/xcarchive.log
 
           status=${PIPESTATUS[0]}
