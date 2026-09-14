@@ -7,7 +7,12 @@ options:
   createIntermediateGroups: true
 
 settings:
-  SWIFT_VERSION: "5.9"
+    SWIFT_VERSION: "5.9"
+
+packages:
+  firebase-ios-sdk:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: 11.6.0
 
 targets:
   MedFleet:
@@ -20,13 +25,22 @@ targets:
         includes:
           - "**/*.swift"
           - "**/*.xcassets"
+          - GoogleService-Info.plist
+          - MedFleet.entitlements
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: net.medfleet.rep
-      MARKETING_VERSION: "1.1.3"
-      CURRENT_PROJECT_VERSION: 5
+      MARKETING_VERSION: "1.1.5"
+      CURRENT_PROJECT_VERSION: 7
       INFOPLIST_FILE: MedFleet/Info.plist
+      CODE_SIGN_ENTITLEMENTS: MedFleet/MedFleet.entitlements
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       DEVELOPMENT_TEAM: ""
       CODE_SIGN_STYLE: Automatic
       TARGETED_DEVICE_FAMILY: "1"
       SWIFT_EMIT_LOC_STRINGS: YES
+    dependencies:
+      - package: firebase-ios-sdk
+        product: FirebaseCore
+      - package: firebase-ios-sdk
+        product: FirebaseMessaging
+

@@ -41,6 +41,18 @@ final class APIClient {
         return res
     }
 
+    func registerDeviceToken(_ token: String) async throws {
+        struct Body: Encodable {
+            let token: String
+            let platform: String
+        }
+        let _: EmptyResponse = try await request(
+            path: "auth/device-token",
+            method: "POST",
+            body: Body(token: token, platform: "ios")
+        )
+    }
+
     func logout() async {
         _ = try? await request(path: "auth/logout", method: "POST", body: Optional<String>.none as String?) as EmptyResponse
         tokenStore.clear()
@@ -149,6 +161,20 @@ final class APIClient {
         return list.first
     }
 
+    func buyerPurchaseReturns() async throws -> [PurchaseReturn] {
+        let r: PurchaseReturnListResponse = try await get("buyer/purchase-returns")
+        return r.data
+    }
+
+    func createPurchaseReturn(vendorName: String, invoiceNo: String?, lines: [PurchaseReturnLineInput]) async throws -> PurchaseReturn {
+        let r: PurchaseReturnResponse = try await request(
+            path: "buyer/purchase-returns",
+            method: "POST",
+            body: PurchaseReturnCreateRequest(vendorName: vendorName, invoiceNo: invoiceNo, lines: lines)
+        )
+        return r.data
+    }
+
     func buyerInventoryAuditCommit(lines: [BuyerInventoryAuditLineInput], note: String?) async throws -> BuyerInventoryAuditCommitResult {
         let total = lines.reduce(0) { $0 + $1.diffValue }
         let req = BuyerInventoryAuditCommitRequest(lines: lines, note: note, totalDiffValue: total)
@@ -208,9 +234,13 @@ final class APIClient {
     }
 
     func buyerPosSessionEvents(after: String) async throws -> [PosSessionEvent] {
+        let pack = try await buyerPosSessionEventsPack(after: after)
+        return pack.data
+    }
+
+    func buyerPosSessionEventsPack(after: String) async throws -> PosSessionEventsResponse {
         let enc = after.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? after
-        let r: PosSessionEventsResponse = try await get("buyer/pos-sessions/events?after=\(enc)")
-        return r.data
+        return try await get("buyer/pos-sessions/events?after=\(enc)")
     }
 
     // MARK: - HTTP core

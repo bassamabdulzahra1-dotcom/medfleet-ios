@@ -6,9 +6,10 @@ final class PosSessionMonitor: ObservableObject {
     private var timer: Timer?
     private var lastAfter: String
     private var started = false
+    private var seen = Set<String>()
 
     init() {
-        lastAfter = ISO8601DateFormatter().string(from: Date())
+        lastAfter = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-60))
     }
 
     func start(appState: AppState) {
@@ -33,23 +34,28 @@ final class PosSessionMonitor: ObservableObject {
     private func poll(appState: AppState) async {
         guard let api = appState.api else { return }
         do {
-            let events = try await api.buyerPosSessionEvents(after: lastAfter)
+            let pack = try await api.buyerPosSessionEventsPack(after: lastAfter)
+            let events = pack.data
             for ev in events {
-                if ev.type == "opened" {
-                    notify(
-                        title: "تم فتح جلسة نقطة البيع",
-                        body: "فتحها \(ev.cashier ?? "موظف") — تابع المبيعات من التطبيق"
-                    )
-                } else if ev.type == "closed" {
-                    notify(
-                        title: "تم إغلاق جلسة نقطة البيع",
-                        body: "أغلقها \(ev.cashier ?? "موظف") · المجموع \(MFFormat.money(ev.amount)) د.ع"
-                    )
+                let key = "\(ev.type):\(ev.sessionId)"
+                let fresh = seen.insert(key).inserted
+                if fresh {
+                    if ev.type == "opened" {
+                        notify(
+                            title: "تم فتح جلسة نقطة البيع",
+                            body: "فتحها \(ev.cashier ?? "موظف") — تابع المبيعات من التطبيق"
+                        )
+                    } else if ev.type == "closed" {
+                        notify(
+                            title: "تم إغلاق جلسة نقطة البيع",
+                            body: "أغلقها \(ev.cashier ?? "موظف") · المجموع \(MFFormat.money(ev.amount)) د.ع"
+                        )
+                    }
                 }
                 if let at = ev.at { lastAfter = at }
             }
-            if events.isEmpty {
-                lastAfter = ISO8601DateFormatter().string(from: Date())
+            if events.isEmpty, let serverTime = pack.serverTime, !serverTime.isEmpty {
+                lastAfter = serverTime
             }
         } catch {
             // لا نكسر التطبيق إذا فشل الاستعلام

@@ -30,12 +30,14 @@ struct User: Codable, Equatable {
     let name: String
     let role: String
     let appRole: String
+    let canSeePrices: Bool
 
     var canSeePos: Bool { role == "buyer" && appRole != "employee" }
 
     enum CodingKeys: String, CodingKey {
         case id, email, name, role
         case appRole = "app_role"
+        case canSeePrices = "can_see_prices"
     }
 
     init(from decoder: Decoder) throws {
@@ -45,6 +47,11 @@ struct User: Codable, Equatable {
         name = try c.decode(String.self, forKey: .name)
         role = try c.decode(String.self, forKey: .role)
         appRole = (try? c.decodeIfPresent(String.self, forKey: .appRole)) ?? "manager"
+        if role == "buyer" && appRole == "employee" {
+            canSeePrices = (try? c.decodeIfPresent(Bool.self, forKey: .canSeePrices)) ?? false
+        } else {
+            canSeePrices = (try? c.decodeIfPresent(Bool.self, forKey: .canSeePrices)) ?? true
+        }
     }
 }
 

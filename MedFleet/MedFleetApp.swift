@@ -1,7 +1,9 @@
 import SwiftUI
+import FirebaseMessaging
 
 @main
 struct MedFleetApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var tokenStore = TokenStore()
     @StateObject private var appState = AppState()
     @StateObject private var connectivity = Connectivity()
@@ -83,11 +85,15 @@ struct RootView: View {
                 BuyerHomeView()
                     .onAppear {
                         appState.setup(tokenStore: tokenStore)
+                        PushRegistrar.sync(api: appState.api, tokenStore: tokenStore)
                         if tokenStore.user?.canSeePos == true {
                             posMonitor.start(appState: appState)
                         } else {
                             posMonitor.stop()
                         }
+                    }
+                    .onReceive(NotificationCenter.default.publisher(for: .mfFcmToken)) { _ in
+                        PushRegistrar.sync(api: appState.api, tokenStore: tokenStore)
                     }
             } else {
                 LoginView()

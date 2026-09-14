@@ -449,4 +449,105 @@ struct PosSessionEvent: Decodable {
     }
 }
 
-struct PosSessionEventsResponse: Decodable { let data: [PosSessionEvent] }
+struct PosSessionEventsResponse: Decodable {
+    let data: [PosSessionEvent]
+    let serverTime: String?
+
+    enum CodingKeys: String, CodingKey {
+        case data
+        case serverTime = "server_time"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        data = (try? c.decodeIfPresent([PosSessionEvent].self, forKey: .data)) ?? []
+        serverTime = try? c.decodeIfPresent(String.self, forKey: .serverTime)
+    }
+}
+
+// MARK: - Purchase returns (مردود الشراء)
+
+struct PurchaseReturnLineInput: Encodable {
+    let barcode: String?
+    let productName: String?
+    let qty: Double
+
+    enum CodingKeys: String, CodingKey {
+        case barcode, qty
+        case productName = "product_name"
+    }
+}
+
+struct PurchaseReturnCreateRequest: Encodable {
+    let vendorName: String
+    let invoiceNo: String?
+    let lines: [PurchaseReturnLineInput]
+
+    enum CodingKeys: String, CodingKey {
+        case lines
+        case vendorName = "vendor_name"
+        case invoiceNo = "invoice_no"
+    }
+}
+
+struct PurchaseReturnLine: Identifiable, Decodable {
+    let id: String?
+    let productId: String?
+    let productName: String
+    let barcode: String?
+    let qty: Double
+    let unitPrice: Double
+    let subtotal: Double
+
+    enum CodingKeys: String, CodingKey {
+        case id, barcode, qty, subtotal
+        case productId = "product_id"
+        case productName = "product_name"
+        case unitPrice = "unit_price"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try? c.decodeIfPresent(String.self, forKey: .id)
+        productId = try? c.decodeIfPresent(String.self, forKey: .productId)
+        productName = (try? c.decodeIfPresent(String.self, forKey: .productName)) ?? ""
+        barcode = try? c.decodeIfPresent(String.self, forKey: .barcode)
+        qty = c.flexibleDouble(.qty) ?? 0
+        unitPrice = c.flexibleDouble(.unitPrice) ?? 0
+        subtotal = c.flexibleDouble(.subtotal) ?? 0
+    }
+}
+
+struct PurchaseReturn: Identifiable, Decodable {
+    let id: String
+    let ref: String?
+    let vendorName: String?
+    let invoiceNo: String?
+    let amountTotal: Double
+    let status: String?
+    let createdAt: String?
+    let lines: [PurchaseReturnLine]
+
+    enum CodingKeys: String, CodingKey {
+        case id, ref, status, lines
+        case vendorName = "vendor_name"
+        case invoiceNo = "invoice_no"
+        case amountTotal = "amount_total"
+        case createdAt = "created_at"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        ref = try? c.decodeIfPresent(String.self, forKey: .ref)
+        vendorName = try? c.decodeIfPresent(String.self, forKey: .vendorName)
+        invoiceNo = try? c.decodeIfPresent(String.self, forKey: .invoiceNo)
+        amountTotal = c.flexibleDouble(.amountTotal) ?? 0
+        status = try? c.decodeIfPresent(String.self, forKey: .status)
+        createdAt = try? c.decodeIfPresent(String.self, forKey: .createdAt)
+        lines = (try? c.decodeIfPresent([PurchaseReturnLine].self, forKey: .lines)) ?? []
+    }
+}
+
+struct PurchaseReturnListResponse: Decodable { let data: [PurchaseReturn] }
+struct PurchaseReturnResponse: Decodable { let data: PurchaseReturn }

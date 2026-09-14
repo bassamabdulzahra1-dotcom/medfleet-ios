@@ -4,6 +4,7 @@ enum BuyerRoute: Hashable {
     case scan
     case inventory
     case inventoryAudit
+    case purchaseReturns
     case posSessions
     case settings
 }
@@ -69,6 +70,9 @@ struct BuyerHomeView: View {
                     moduleCard(title: "الجرد المخزني", icon: "square.grid.2x2") {
                         path.append(BuyerRoute.inventoryAudit)
                     }
+                    moduleCard(title: "مردود الشراء", icon: "arrow.uturn.left") {
+                        path.append(BuyerRoute.purchaseReturns)
+                    }
                     if tokenStore.user?.canSeePos == true {
                         moduleCard(title: "جلسات نقطة البيع", icon: "rectangle.split.3x1") {
                             path.append(BuyerRoute.posSessions)
@@ -90,6 +94,7 @@ struct BuyerHomeView: View {
                     case .scan: BuyerScanView()
                     case .inventory: BuyerInventoryView()
                     case .inventoryAudit: BuyerInventoryAuditView()
+                    case .purchaseReturns: BuyerPurchaseReturnsView()
                     case .posSessions: BuyerPosSessionsView()
                     case .settings: BuyerSettingsView()
                     }
