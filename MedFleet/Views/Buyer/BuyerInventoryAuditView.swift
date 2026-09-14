@@ -47,7 +47,7 @@ struct BuyerInventoryAuditView: View {
             }
             .ignoresSafeArea()
         }
-        .onChange(of: query) { value in
+        .onChangeValue(query) { value in
             success = nil
             if value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 results = []

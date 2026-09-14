@@ -30,7 +30,7 @@ struct BuyerInventoryView: View {
         .background(LinearGradient(colors: [MFColors.bgTop, MFColors.bgBottom], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
         .environment(\.layoutDirection, .rightToLeft)
         .task { await load("") }
-        .onChange(of: query) { newValue in
+        .onChangeValue(query) { newValue in
             searchTask?.cancel()
             searchTask = Task {
                 try? await Task.sleep(nanoseconds: 350_000_000)

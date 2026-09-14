@@ -403,7 +403,7 @@ private struct ManualReturnProductSheet: View {
         .padding(16)
         .background(MFColors.bgTop.ignoresSafeArea())
         .environment(\.layoutDirection, .rightToLeft)
-        .onChange(of: name) { value in
+        .onChangeValue(name) { value in
             searchTask?.cancel()
             let q = value.trimmingCharacters(in: .whitespacesAndNewlines)
             guard q.count >= 2 else {
