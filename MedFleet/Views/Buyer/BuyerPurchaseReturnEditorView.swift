@@ -17,6 +17,8 @@ struct BuyerPurchaseReturnEditorView: View {
 
     @State private var vendor = ""
     @State private var invoiceNo = ""
+    @State private var offices: [BuyerSupplierOffice] = []
+    @FocusState private var vendorFocused: Bool
     @State private var lines: [DraftReturnLine] = []
     @State private var saving = false
     @State private var error: String?
@@ -36,7 +38,7 @@ struct BuyerPurchaseReturnEditorView: View {
             header
             ScrollView {
                 VStack(alignment: .trailing, spacing: 12) {
-                    field("اسم المذخر", text: $vendor)
+                vendorSearchField
                     field("رقم الفاتورة", text: $invoiceNo)
 
                     HStack(spacing: 8) {
@@ -147,6 +149,7 @@ struct BuyerPurchaseReturnEditorView: View {
         }
         .background(LinearGradient(colors: [MFColors.bgTop, MFColors.bgBottom], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
         .environment(\.layoutDirection, .rightToLeft)
+        .task { await loadOffices() }
         .sheet(isPresented: $showScanner) {
             BarcodeScannerSheet { code in
                 showScanner = false
@@ -206,6 +209,61 @@ struct BuyerPurchaseReturnEditorView: View {
             .background(MFColors.surface)
             .clipShape(RoundedRectangle(cornerRadius: 11))
             .overlay(RoundedRectangle(cornerRadius: 11).stroke(MFColors.muted.opacity(0.25), lineWidth: 1))
+    }
+
+    private var officeMatches: [BuyerSupplierOffice] {
+        let q = vendor.trimmingCharacters(in: .whitespacesAndNewlines)
+        if q.isEmpty { return Array(offices.prefix(12)) }
+        return Array(offices.filter { $0.name.localizedCaseInsensitiveContains(q) }.prefix(12))
+    }
+
+    private var vendorSearchField: some View {
+        VStack(alignment: .trailing, spacing: 6) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(MFColors.muted)
+                TextField("ابحث عن المذخر", text: $vendor)
+                    .foregroundStyle(MFColors.navy)
+                    .tint(MFColors.gold)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .focused($vendorFocused)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 12)
+            .background(MFColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 11))
+            .overlay(RoundedRectangle(cornerRadius: 11).stroke(MFColors.muted.opacity(0.25), lineWidth: 1))
+
+            if vendorFocused && !officeMatches.isEmpty {
+                VStack(spacing: 0) {
+                    ForEach(officeMatches) { office in
+                        Button {
+                            vendor = office.name
+                            vendorFocused = false
+                        } label: {
+                            Text(office.name)
+                                .font(.subheadline)
+                                .foregroundStyle(MFColors.navy)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                        }
+                        if office.id != officeMatches.last?.id {
+                            Divider().overlay(MFColors.muted.opacity(0.2))
+                        }
+                    }
+                }
+                .background(MFColors.surfaceSoft)
+                .clipShape(RoundedRectangle(cornerRadius: 11))
+                .overlay(RoundedRectangle(cornerRadius: 11).stroke(MFColors.gold.opacity(0.12), lineWidth: 1))
+            }
+        }
+    }
+
+    private func loadOffices() async {
+        guard let api = appState.api else { return }
+        offices = (try? await api.buyerSuppliers()) ?? []
     }
 
     private func lineMeta(_ line: DraftReturnLine) -> String {

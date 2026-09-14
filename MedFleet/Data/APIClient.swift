@@ -161,6 +161,16 @@ final class APIClient {
         return list.first
     }
 
+    func buyerSuppliers(q: String? = nil) async throws -> [BuyerSupplierOffice] {
+        var path = "buyer/suppliers?limit=400"
+        if let q, !q.isEmpty {
+            let enc = q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? q
+            path = "buyer/suppliers?q=\(enc)&limit=80"
+        }
+        let r: BuyerSupplierListResponse = try await get(path)
+        return r.data
+    }
+
     func buyerPurchaseReturns() async throws -> [PurchaseReturn] {
         let r: PurchaseReturnListResponse = try await get("buyer/purchase-returns")
         return r.data

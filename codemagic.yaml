@@ -90,6 +90,13 @@ workflows:
         distribution_type: app_store
         bundle_identifier: net.medfleet.rep
 
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+
     scripts:
       - *run_xcodegen
 

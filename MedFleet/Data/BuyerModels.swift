@@ -551,3 +551,10 @@ struct PurchaseReturn: Identifiable, Decodable {
 
 struct PurchaseReturnListResponse: Decodable { let data: [PurchaseReturn] }
 struct PurchaseReturnResponse: Decodable { let data: PurchaseReturn }
+
+struct BuyerSupplierOffice: Identifiable, Decodable, Hashable {
+    let id: String
+    let name: String
+}
+
+struct BuyerSupplierListResponse: Decodable { let data: [BuyerSupplierOffice] }
