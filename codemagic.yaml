@@ -176,15 +176,15 @@ workflows:
           xcode-project use-profiles --project "$CM_BUILD_DIR/$XCODE_PROJECT"
 
           PROFILE_NAME="MedFleet_AppStore_${BUILD_NUMBER}"
-          cat > "$CM_BUILD_DIR/configs/signing.xcconfig" <<EOF
-CODE_SIGN_STYLE = Manual
-DEVELOPMENT_TEAM = DZW782KNRM
-CODE_SIGN_IDENTITY = Apple Distribution
-CODE_SIGN_IDENTITY[sdk=iphoneos*] = Apple Distribution
-PROVISIONING_PROFILE_SPECIFIER = ${PROFILE_NAME}
-CODE_SIGNING_REQUIRED = YES
-CODE_SIGNING_ALLOWED = YES
-EOF
+          {
+            echo "CODE_SIGN_STYLE = Manual"
+            echo "DEVELOPMENT_TEAM = DZW782KNRM"
+            echo "CODE_SIGN_IDENTITY = Apple Distribution"
+            echo "CODE_SIGN_IDENTITY[sdk=iphoneos*] = Apple Distribution"
+            echo "PROVISIONING_PROFILE_SPECIFIER = ${PROFILE_NAME}"
+            echo "CODE_SIGNING_REQUIRED = YES"
+            echo "CODE_SIGNING_ALLOWED = YES"
+          } > "$CM_BUILD_DIR/configs/signing.xcconfig"
           echo "Wrote signing.xcconfig for ${PROFILE_NAME}"
           cat "$CM_BUILD_DIR/configs/signing.xcconfig"
           echo "================ TARGET SIGNING SETTINGS ================"
