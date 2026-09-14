@@ -105,9 +105,54 @@ workflows:
           set -e
           keychain initialize
           keychain add-certificates
+
+          echo "Enable Push Notifications on net.medfleet.rep"
+          BID=$(app-store-connect bundle-ids list \
+            --bundle-id-identifier "$BUNDLE_ID" \
+            --strict-match-identifier \
+            --json | python3 -c '
+          import json, sys
+          raw = json.load(sys.stdin)
+          items = raw if isinstance(raw, list) else raw.get("data") or raw.get("bundleIds") or []
+          for item in items:
+              if not isinstance(item, dict):
+                  continue
+              attrs = item.get("attributes") if isinstance(item.get("attributes"), dict) else item
+              ident = attrs.get("identifier") or item.get("identifier")
+              rid = item.get("id") or attrs.get("id")
+              if ident == "net.medfleet.rep" and rid:
+                  print(rid)
+                  raise SystemExit(0)
+          raise SystemExit("bundle id net.medfleet.rep not found")
+          ')
+          echo "Bundle ID resource: $BID"
+          if app-store-connect bundle-ids capabilities "$BID" | grep -qi "Push Notifications"; then
+            echo "Push Notifications already enabled"
+          else
+            app-store-connect bundle-ids enable-capabilities "$BID" --capability "Push Notifications"
+          fi
+
+          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILES_DIR"
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --platform IOS \
+            --type IOS_APP_STORE \
+            --strict-match-identifier \
+            --create \
+            --delete-stale-profiles \
+            --profiles-dir "$PROFILES_DIR"
+
+          for p in "$PROFILES_DIR"/*.mobileprovision; do
+            [ -f "$p" ] || continue
+            if ! security cms -D -i "$p" 2>/dev/null | grep -q "aps-environment"; then
+              echo "Removing profile without Push: $(basename "$p")"
+              rm -f "$p"
+            fi
+          done
+
           xcode-project use-profiles --project "$CM_BUILD_DIR/$XCODE_PROJECT"
           echo "================ PROFILE ENTITLEMENTS ================"
-          for p in "$HOME/Library/MobileDevice/Provisioning Profiles"/*.mobileprovision; do
+          for p in "$PROFILES_DIR"/*.mobileprovision; do
             [ -f "$p" ] || continue
             echo "---- $(basename "$p") ----"
             security cms -D -i "$p" 2>/dev/null | plutil -extract Name raw -o - - 2>/dev/null || true
