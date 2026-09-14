@@ -127,20 +127,57 @@ workflows:
 
       - name: Build IPA
         script: |
-          set -o pipefail
-          xcode-project build-ipa \
-            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME" \
-            --disable-xcpretty \
-            --archive-flags="-destination generic/platform=iOS" \
+          set -euo pipefail
+          ARCHIVE_PATH="$CM_BUILD_DIR/build/ios/xcarchive/MedFleet.xcarchive"
+          IPA_DIR="$CM_BUILD_DIR/build/ios/ipa"
+          mkdir -p "$(dirname "$ARCHIVE_PATH")" "$IPA_DIR"
+
+          EXPORT_PLIST=""
+          for candidate in /Users/builder/export_options.plist "$HOME/export_options.plist" "$CM_BUILD_DIR/export_options.plist"; do
+            if [ -f "$candidate" ]; then
+              EXPORT_PLIST="$candidate"
+              break
+            fi
+          done
+          if [ -z "$EXPORT_PLIST" ]; then
+            echo "export_options.plist not found after use-profiles"
+            exit 1
+          fi
+          echo "Using export options: $EXPORT_PLIST"
+          cat "$EXPORT_PLIST"
+
+          # Do not pass CODE_SIGN_STYLE / profile flags here — xcode-project build-ipa
+          # applies them to Firebase SPM targets and the archive fails.
+          set +e
+          xcodebuild archive \
+            -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$ARCHIVE_PATH" \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            ENABLE_PREVIEWS=NO \
             2>&1 | tee /tmp/xcarchive.log
           status=${PIPESTATUS[0]}
-          echo "================ ARCHIVE ERRORS ================"
-          grep -niE "error:|❌|CodeSign|Provisioning|failed|entitlement|destination" /tmp/xcarchive.log | tail -120 || true
-          echo "================ LAST 80 LINES ================"
-          tail -80 /tmp/xcarchive.log || true
-          echo "================================================"
-          exit $status
+          set -e
+
+          if [ "$status" -ne 0 ]; then
+            echo "================ ARCHIVE ERRORS ================"
+            grep -niE "error:|❌|fatal error|CodeSign|Provisioning|entitlement" /tmp/xcarchive.log | tail -150 || true
+            echo "================ BEFORE ARCHIVE FAILED ================"
+            grep -nB 30 "ARCHIVE FAILED" /tmp/xcarchive.log | tail -80 || true
+            echo "================ LAST 80 LINES ================"
+            tail -80 /tmp/xcarchive.log || true
+            echo "================================================"
+            exit "$status"
+          fi
+
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportOptionsPlist "$EXPORT_PLIST" \
+            -exportPath "$IPA_DIR" \
+            2>&1 | tee /tmp/xcexport.log
+          ls -la "$IPA_DIR"
 
     artifacts:
       - build/ios/ipa/*.ipa

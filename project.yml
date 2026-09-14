@@ -3,16 +3,17 @@ options:
   bundleIdPrefix: net.medfleet
   deploymentTarget:
     iOS: "16.0"
-  xcodeVersion: "15.0"
+  xcodeVersion: "16.0"
   createIntermediateGroups: true
 
 settings:
-    SWIFT_VERSION: "5.9"
+  ENABLE_PREVIEWS: NO
+  ENABLE_DEBUG_DYLIB: NO
 
 packages:
   firebase-ios-sdk:
     url: https://github.com/firebase/firebase-ios-sdk
-    from: 11.6.0
+    majorVersion: 11.6.0
 
 targets:
   MedFleet:
@@ -37,7 +38,9 @@ targets:
       DEVELOPMENT_TEAM: ""
       CODE_SIGN_STYLE: Automatic
       TARGETED_DEVICE_FAMILY: "1"
+      SWIFT_VERSION: "5.0"
       SWIFT_EMIT_LOC_STRINGS: YES
+      ENABLE_PREVIEWS: NO
     dependencies:
       - package: firebase-ios-sdk
         product: FirebaseCore
