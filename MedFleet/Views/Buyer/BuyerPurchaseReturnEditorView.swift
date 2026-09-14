@@ -403,7 +403,7 @@ private struct ManualReturnProductSheet: View {
         .padding(16)
         .background(MFColors.bgTop.ignoresSafeArea())
         .environment(\.layoutDirection, .rightToLeft)
-        .onChangeValue(name) { value in
+        .onChange(of: name, perform: { value in
             searchTask?.cancel()
             let q = value.trimmingCharacters(in: .whitespacesAndNewlines)
             guard q.count >= 2 else {
@@ -415,6 +415,6 @@ private struct ManualReturnProductSheet: View {
                 if Task.isCancelled { return }
                 suggestions = (try? await appState.api?.buyerInventory(q: q)) ?? []
             }
-        }
+        })
     }
 }

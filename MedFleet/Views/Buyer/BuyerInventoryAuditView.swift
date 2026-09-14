@@ -47,7 +47,7 @@ struct BuyerInventoryAuditView: View {
             }
             .ignoresSafeArea()
         }
-        .onChangeValue(query) { value in
+        .onChange(of: query, perform: { value in
             success = nil
             if value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 results = []
@@ -59,7 +59,7 @@ struct BuyerInventoryAuditView: View {
                 if Task.isCancelled { return }
                 await searchByNameOrBarcode(value)
             }
-        }
+        })
     }
 
     private var header: some View {

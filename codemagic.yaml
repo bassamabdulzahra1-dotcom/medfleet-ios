@@ -174,23 +174,6 @@ workflows:
           done
 
           xcode-project use-profiles --project "$CM_BUILD_DIR/$XCODE_PROJECT"
-
-          PROFILE_NAME="MedFleet_AppStore_${BUILD_NUMBER}"
-          {
-            echo "CODE_SIGN_STYLE = Manual"
-            echo "DEVELOPMENT_TEAM = DZW782KNRM"
-            echo "CODE_SIGN_IDENTITY = Apple Distribution"
-            echo "CODE_SIGN_IDENTITY[sdk=iphoneos*] = Apple Distribution"
-            echo "PROVISIONING_PROFILE_SPECIFIER = ${PROFILE_NAME}"
-            echo "CODE_SIGNING_REQUIRED = YES"
-            echo "CODE_SIGNING_ALLOWED = YES"
-          } > "$CM_BUILD_DIR/configs/signing.xcconfig"
-          echo "Wrote signing.xcconfig for ${PROFILE_NAME}"
-          cat "$CM_BUILD_DIR/configs/signing.xcconfig"
-          echo "================ TARGET SIGNING SETTINGS ================"
-          xcodebuild -project "$CM_BUILD_DIR/$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -showBuildSettings \
-            | grep -E "CODE_SIGN_|DEVELOPMENT_TEAM|PROVISIONING_PROFILE|PRODUCT_BUNDLE" || true
-          echo "======================================================"
           echo "================ PROFILE ENTITLEMENTS ================"
           for p in "$PROFILES_DIR"/*.mobileprovision; do
             [ -f "$p" ] || continue
@@ -206,6 +189,19 @@ workflows:
           cd "$CM_BUILD_DIR"
           agvtool new-version -all "$BUILD_NUMBER"
 
+      - name: Apply MedFleet signing
+        script: |
+          set -e
+          PROFILE_NAME="MedFleet_AppStore_${BUILD_NUMBER}"
+          python3 "$CM_BUILD_DIR/tools/patch_ios_signing.py" \
+            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            --profile-name "$PROFILE_NAME" \
+            --export-options "$CM_BUILD_DIR/export_options.plist"
+          echo "================ TARGET SIGNING SETTINGS ================"
+          xcodebuild -project "$CM_BUILD_DIR/$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -showBuildSettings \
+            | grep -E "CODE_SIGN_|DEVELOPMENT_TEAM|PROVISIONING_PROFILE|PRODUCT_BUNDLE" || true
+          echo "======================================================"
+
       - name: Verify signing identities
         script: |
           security find-identity -v -p codesigning
@@ -217,15 +213,9 @@ workflows:
           IPA_DIR="$CM_BUILD_DIR/build/ios/ipa"
           mkdir -p "$(dirname "$ARCHIVE_PATH")" "$IPA_DIR"
 
-          EXPORT_PLIST=""
-          for candidate in /Users/builder/export_options.plist "$HOME/export_options.plist" "$CM_BUILD_DIR/export_options.plist"; do
-            if [ -f "$candidate" ]; then
-              EXPORT_PLIST="$candidate"
-              break
-            fi
-          done
-          if [ -z "$EXPORT_PLIST" ]; then
-            echo "export_options.plist not found after use-profiles"
+          EXPORT_PLIST="$CM_BUILD_DIR/export_options.plist"
+          if [ ! -f "$EXPORT_PLIST" ]; then
+            echo "export_options.plist missing after signing patch"
             exit 1
           fi
           echo "Using export options: $EXPORT_PLIST"

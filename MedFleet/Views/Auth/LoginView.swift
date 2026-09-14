@@ -174,7 +174,7 @@ struct LoginView: View {
             RoundedRectangle(cornerRadius: 14)
                 .stroke(Color(red: 203/255, green: 213/255, blue: 225/255).opacity(0.12), lineWidth: 1)
         )
-        .onChangeValue(text.wrappedValue) { _ in error = nil }
+        .onChange(of: text.wrappedValue, perform: { _ in error = nil })
     }
 
     private func login() async {

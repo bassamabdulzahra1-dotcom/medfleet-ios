@@ -91,17 +91,6 @@ struct ModuleBackground: ViewModifier {
     }
 }
 
-extension View {
-    @ViewBuilder
-    func onChangeValue<V: Equatable>(_ value: V, perform action: @escaping (V) -> Void) -> some View {
-        if #available(iOS 17.0, *) {
-            onChange(of: value) { _, newValue in action(newValue) }
-        } else {
-            onChange(of: value, perform: action)
-        }
-    }
-}
-
 struct BackButton: View {
     let action: () -> Void
     var body: some View {

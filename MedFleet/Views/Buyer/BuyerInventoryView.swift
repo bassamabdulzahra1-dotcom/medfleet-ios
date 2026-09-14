@@ -30,14 +30,14 @@ struct BuyerInventoryView: View {
         .background(LinearGradient(colors: [MFColors.bgTop, MFColors.bgBottom], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
         .environment(\.layoutDirection, .rightToLeft)
         .task { await load("") }
-        .onChangeValue(query) { newValue in
+        .onChange(of: query, perform: { newValue in
             searchTask?.cancel()
             searchTask = Task {
                 try? await Task.sleep(nanoseconds: 350_000_000)
                 if Task.isCancelled { return }
                 await load(newValue)
             }
-        }
+        })
     }
 
     private var header: some View {
