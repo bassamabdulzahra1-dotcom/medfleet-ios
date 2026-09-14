@@ -134,12 +134,35 @@ workflows:
 
           PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILES_DIR"
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --platform IOS \
+
+          CERT_IDS=$(app-store-connect certificates list \
+            --type DISTRIBUTION \
+            --type IOS_DISTRIBUTION \
+            --json | python3 -c '
+          import json, sys
+          raw = json.load(sys.stdin)
+          items = raw if isinstance(raw, list) else raw.get("data") or raw.get("certificates") or []
+          ids = []
+          for item in items:
+              if not isinstance(item, dict):
+                  continue
+              rid = item.get("id") or (item.get("attributes") or {}).get("id")
+              if rid:
+                  ids.append(str(rid))
+          if not ids:
+              raise SystemExit("no Apple Distribution certificates found")
+          print(" ".join(ids))
+          ')
+          echo "Certificate IDs: $CERT_IDS"
+
+          # Create a fresh App Store profile with current App ID capabilities (Push).
+          # Do not use fetch-signing-files --create; that needs a certificate private key.
+          # shellcheck disable=SC2086
+          app-store-connect profiles create "$BID" \
             --type IOS_APP_STORE \
-            --strict-match-identifier \
-            --create \
-            --delete-stale-profiles \
+            --name "MedFleet_AppStore_${BUILD_NUMBER}" \
+            --certificate-ids $CERT_IDS \
+            --save \
             --profiles-dir "$PROFILES_DIR"
 
           for p in "$PROFILES_DIR"/*.mobileprovision; do
