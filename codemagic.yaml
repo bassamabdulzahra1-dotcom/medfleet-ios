@@ -105,7 +105,15 @@ workflows:
           set -e
           keychain initialize
           keychain add-certificates
-          xcode-project use-profiles
+          xcode-project use-profiles --project "$CM_BUILD_DIR/$XCODE_PROJECT"
+          echo "================ PROFILE ENTITLEMENTS ================"
+          for p in "$HOME/Library/MobileDevice/Provisioning Profiles"/*.mobileprovision; do
+            [ -f "$p" ] || continue
+            echo "---- $(basename "$p") ----"
+            security cms -D -i "$p" 2>/dev/null | plutil -extract Name raw -o - - 2>/dev/null || true
+            security cms -D -i "$p" 2>/dev/null | plutil -extract Entitlements xml1 -o - - 2>/dev/null || true
+          done
+          echo "======================================================"
 
       - name: Set build number
         script: |
@@ -123,10 +131,14 @@ workflows:
           xcode-project build-ipa \
             --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME" \
+            --disable-xcpretty \
+            --archive-flags="-destination generic/platform=iOS" \
             2>&1 | tee /tmp/xcarchive.log
           status=${PIPESTATUS[0]}
           echo "================ ARCHIVE ERRORS ================"
-          grep -nE "error:|ERROR |CodeSign|Provisioning|failed" /tmp/xcarchive.log | tail -100 || true
+          grep -niE "error:|❌|CodeSign|Provisioning|failed|entitlement|destination" /tmp/xcarchive.log | tail -120 || true
+          echo "================ LAST 80 LINES ================"
+          tail -80 /tmp/xcarchive.log || true
           echo "================================================"
           exit $status
 
