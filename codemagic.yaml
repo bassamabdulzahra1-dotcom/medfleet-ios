@@ -3,7 +3,7 @@
 
 definitions:
   env_ios: &env_ios
-    xcode: latest
+    xcode: 16.4
     vars:
       XCODE_PROJECT: MedFleet.xcodeproj
       XCODE_SCHEME: MedFleet
@@ -119,11 +119,16 @@ workflows:
 
       - name: Build IPA
         script: |
-          set -e
-
+          set -o pipefail
           xcode-project build-ipa \
             --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            2>&1 | tee /tmp/xcarchive.log
+          status=${PIPESTATUS[0]}
+          echo "================ ARCHIVE ERRORS ================"
+          grep -nE "error:|ERROR |CodeSign|Provisioning|failed" /tmp/xcarchive.log | tail -100 || true
+          echo "================================================"
+          exit $status
 
     artifacts:
       - build/ios/ipa/*.ipa
