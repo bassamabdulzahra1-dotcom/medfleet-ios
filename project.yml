@@ -3,7 +3,7 @@ options:
   bundleIdPrefix: net.medfleet
   deploymentTarget:
     iOS: "16.0"
-  xcodeVersion: "16.0"
+  xcodeVersion: "26.0"
   createIntermediateGroups: true
 
 settings:
@@ -41,6 +41,7 @@ targets:
       DEVELOPMENT_TEAM: DZW782KNRM
       CODE_SIGN_STYLE: Manual
       CODE_SIGN_IDENTITY: Apple Distribution
+      SWIFT_VERSION: "5.0"
       IPHONEOS_DEPLOYMENT_TARGET: "16.0"
       TARGETED_DEVICE_FAMILY: "1"
       SWIFT_EMIT_LOC_STRINGS: YES

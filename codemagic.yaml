@@ -1,9 +1,10 @@
 # MedFleet iOS — Codemagic CI/CD
 # Bundle ID: net.medfleet.rep
+# App Store Connect requires the iOS 26 SDK (Xcode 26+).
 
 definitions:
   env_ios: &env_ios
-    xcode: 16.4
+    xcode: 26.6
     vars:
       XCODE_PROJECT: MedFleet.xcodeproj
       XCODE_SCHEME: MedFleet
