@@ -1,24 +1,26 @@
 import SwiftUI
 
 enum MFColors {
-    static let navy = Color(red: 243/255, green: 244/255, blue: 246/255)
-    static let navy2 = Color(red: 148/255, green: 163/255, blue: 184/255)
-    static let gold = Color(red: 203/255, green: 213/255, blue: 225/255)
-    static let goldDark = Color(red: 148/255, green: 163/255, blue: 184/255)
-    static let cream = Color(red: 20/255, green: 22/255, blue: 24/255)
-    static let danger = Color(red: 248/255, green: 113/255, blue: 113/255)
-    static let ok = Color(red: 148/255, green: 163/255, blue: 184/255)
-    static let muted = Color(red: 156/255, green: 163/255, blue: 175/255)
-    static let bgTop = Color(red: 20/255, green: 22/255, blue: 24/255)
-    static let bgBottom = Color(red: 13/255, green: 15/255, blue: 17/255)
-    static let surface = Color(red: 26/255, green: 28/255, blue: 32/255)
-    static let surfaceSoft = Color(red: 34/255, green: 38/255, blue: 43/255)
-    static let accent = gold
-    static let accentDark = goldDark
-    static let accentSoft = Color(red: 17/255, green: 19/255, blue: 21/255)
-    static let ink = Color(red: 20/255, green: 22/255, blue: 24/255)
-    static let button = Color(red: 42/255, green: 46/255, blue: 53/255)
-    static let buttonDark = Color(red: 26/255, green: 28/255, blue: 35/255)
+    static let navy = Color(red: 14/255, green: 26/255, blue: 23/255)
+    static let navy2 = Color(red: 91/255, green: 103/255, blue: 99/255)
+    static let gold = Color(red: 201/255, green: 169/255, blue: 110/255)
+    static let goldDark = Color(red: 139/255, green: 106/255, blue: 47/255)
+    static let cream = Color(red: 245/255, green: 243/255, blue: 239/255)
+    static let danger = Color(red: 163/255, green: 50/255, blue: 30/255)
+    static let ok = Color(red: 31/255, green: 122/255, blue: 77/255)
+    static let muted = Color(red: 91/255, green: 103/255, blue: 99/255)
+    static let bgTop = Color(red: 245/255, green: 243/255, blue: 239/255)
+    static let bgBottom = Color(red: 245/255, green: 243/255, blue: 239/255)
+    static let surface = Color.white
+    static let surfaceSoft = Color(red: 233/255, green: 229/255, blue: 220/255)
+    static let accent = Color(red: 11/255, green: 59/255, blue: 52/255)
+    static let accentDark = Color(red: 8/255, green: 38/255, blue: 31/255)
+    static let accentSoft = Color(red: 227/255, green: 240/255, blue: 235/255)
+    static let ink = Color(red: 14/255, green: 26/255, blue: 23/255)
+    static let button = Color(red: 11/255, green: 59/255, blue: 52/255)
+    static let buttonDark = Color(red: 8/255, green: 38/255, blue: 31/255)
+    static let pine = Color(red: 11/255, green: 59/255, blue: 52/255)
+    static let porcelain = Color(red: 245/255, green: 243/255, blue: 239/255)
 }
 
 enum MFFormat {
@@ -80,14 +82,7 @@ enum MFFormat {
 struct ModuleBackground: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .background(
-                LinearGradient(
-                    colors: [MFColors.bgTop, MFColors.surfaceSoft, MFColors.bgBottom],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                    .ignoresSafeArea()
-            )
+            .background(MFColors.porcelain.ignoresSafeArea())
     }
 }
 
@@ -97,12 +92,12 @@ struct BackButton: View {
         Button(action: action) {
             Image(systemName: "chevron.right")
                 .font(.body.weight(.semibold))
-                .foregroundStyle(MFColors.gold)
+                .foregroundStyle(MFColors.pine)
                 .frame(width: 44, height: 44)
-                .background(MFColors.surface)
+                .background(Color.white)
                 .clipShape(Circle())
-                .overlay(Circle().stroke(MFColors.gold.opacity(0.12), lineWidth: 1))
-                .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
+                .overlay(Circle().stroke(MFColors.gold.opacity(0.25), lineWidth: 1))
+                .shadow(color: MFColors.ink.opacity(0.08), radius: 6, y: 3)
         }
     }
 }

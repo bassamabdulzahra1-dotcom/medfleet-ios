@@ -13,118 +13,71 @@ struct LoginView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 20/255, green: 22/255, blue: 24/255),
-                    Color(red: 34/255, green: 38/255, blue: 43/255),
-                    Color(red: 13/255, green: 15/255, blue: 17/255)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            MFColors.pine.ignoresSafeArea()
+            VStack(alignment: .leading, spacing: 0) {
+                Spacer()
+                Text("M")
+                    .font(.system(size: 44, weight: .regular, design: .serif))
+                    .foregroundStyle(MFColors.pine)
+                    .frame(width: 84, height: 84)
+                    .background(MFColors.gold, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+                Text("MEDFLEET")
+                    .font(.system(size: 30, weight: .regular, design: .serif))
+                    .tracking(10)
+                    .foregroundStyle(MFColors.gold)
+                    .environment(\.layoutDirection, .leftToRight)
+                    .padding(.top, 22)
+                Text("إدارة الصيدلية بأناقة —\nالمخزن، الفواتير، والفريق في مكان واحد.")
+                    .font(.system(size: 15))
+                    .foregroundStyle(Color.white.opacity(0.72))
+                    .lineSpacing(6)
+                    .padding(.top, 14)
 
-            ScrollView {
-                VStack(spacing: 0) {
-                    Text("MEDFLEET")
-                        .font(.system(size: 32, weight: .bold))
-                        .tracking(6)
-                        .foregroundStyle(platinumTitle)
-                        .padding(.leading, 6)
-                        .environment(\.layoutDirection, .leftToRight)
-
-                    Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [.clear, Color(red: 203/255, green: 213/255, blue: 225/255), .clear],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .frame(width: 60, height: 3)
-                        .shadow(color: Color(red: 203/255, green: 213/255, blue: 225/255).opacity(0.4), radius: 8)
-                        .padding(.top, 6)
-                        .padding(.bottom, 40)
-
-                    field(
-                        text: $email,
-                        placeholder: "البريد الإلكتروني أو اسم المستخدم",
-                        isSecure: false
-                    )
-                    .padding(.bottom, 20)
-
-                    field(
-                        text: $password,
-                        placeholder: "كلمة المرور",
-                        isSecure: !showPassword
-                    )
+                field(text: $email, placeholder: "البريد الإلكتروني أو اسم المستخدم", isSecure: false)
+                    .padding(.top, 28)
+                field(text: $password, placeholder: "كلمة المرور", isSecure: !showPassword)
                     .overlay(alignment: .leading) {
                         Button { showPassword.toggle() } label: {
                             Image(systemName: showPassword ? "eye.slash" : "eye")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundStyle(Color(red: 203/255, green: 213/255, blue: 225/255).opacity(0.7))
+                                .foregroundStyle(MFColors.gold.opacity(0.85))
                                 .padding(14)
                         }
                         .buttonStyle(.plain)
                     }
-                    .padding(.bottom, 10)
+                    .padding(.top, 12)
 
-                    if let error {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundStyle(Color(red: 248/255, green: 113/255, blue: 113/255))
-                            .frame(maxWidth: .infinity)
-                            .padding(.bottom, 8)
-                    }
-
-                    Button {
-                        Task { await login() }
-                    } label: {
-                        Group {
-                            if loading {
-                                ProgressView().tint(Color(red: 203/255, green: 213/255, blue: 225/255))
-                            } else {
-                                Text("تسجيل الدخول")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .tracking(1)
-                            }
-                        }
+                if let error {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(Color(red: 232/255, green: 154/255, blue: 134/255))
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .foregroundStyle(Color(red: 203/255, green: 213/255, blue: 225/255))
-                        .background(
-                            LinearGradient(
-                                colors: [Color(red: 42/255, green: 46/255, blue: 53/255), Color(red: 26/255, green: 28/255, blue: 35/255)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                        .shadow(color: .black.opacity(0.3), radius: 10, y: 4)
-                    }
-                    .disabled(loading || email.isEmpty || password.isEmpty)
-                    .opacity((loading || email.isEmpty || password.isEmpty) ? 0.55 : 1)
-                    .padding(.top, 10)
-
-                    HStack(spacing: 4) {
-                        Text("نسيت كلمة المرور؟")
-                            .foregroundStyle(Color(red: 100/255, green: 116/255, blue: 139/255))
-                        Button("استعادة الحساب") {
-                            showRecoverHint = true
-                        }
-                        .foregroundStyle(Color(red: 203/255, green: 213/255, blue: 225/255))
-                    }
-                    .font(.system(size: 13))
-                    .padding(.top, 30)
+                        .padding(.top, 12)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 60)
-                .padding(.bottom, 28)
-                .frame(maxWidth: 380)
-                .frame(maxWidth: .infinity)
+
+                Spacer()
+                Button {
+                    Task { await login() }
+                } label: {
+                    Group {
+                        if loading {
+                            ProgressView().tint(MFColors.pine)
+                        } else {
+                            Text("دخول")
+                                .font(.system(size: 16, weight: .bold))
+                        }
+                    }
+                    .foregroundStyle(MFColors.pine)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 58)
+                    .background(MFColors.gold, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                }
+                .disabled(loading || email.isEmpty || password.isEmpty)
+                .opacity((loading || email.isEmpty || password.isEmpty) ? 0.55 : 1)
             }
+            .padding(28)
         }
         .environment(\.layoutDirection, .rightToLeft)
+        .preferredColorScheme(.dark)
         .alert("استعادة الحساب", isPresented: $showRecoverHint) {
             Button("حسناً", role: .cancel) {}
         } message: {
@@ -132,23 +85,11 @@ struct LoginView: View {
         }
     }
 
-    private var platinumTitle: LinearGradient {
-        LinearGradient(
-            colors: [
-                .white,
-                Color(red: 203/255, green: 213/255, blue: 225/255),
-                Color(red: 100/255, green: 116/255, blue: 139/255)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    }
-
     private func field(text: Binding<String>, placeholder: String, isSecure: Bool) -> some View {
         ZStack(alignment: .trailing) {
             if text.wrappedValue.isEmpty {
                 Text(placeholder)
-                    .foregroundStyle(Color(red: 113/255, green: 113/255, blue: 122/255))
+                    .foregroundStyle(Color.white.opacity(0.55))
                     .font(.system(size: 14))
                     .padding(.horizontal, 18)
             }
@@ -159,20 +100,20 @@ struct LoginView: View {
                     TextField("", text: text)
                 }
             }
-            .foregroundStyle(Color(red: 243/255, green: 244/255, blue: 246/255))
+            .foregroundStyle(.white)
             .font(.system(size: 15))
-            .tint(Color(red: 203/255, green: 213/255, blue: 225/255))
+            .tint(MFColors.gold)
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
             .padding(.horizontal, 18)
             .padding(.trailing, isSecure ? 28 : 0)
         }
         .padding(.vertical, 16)
-        .background(Color(red: 17/255, green: 19/255, blue: 21/255).opacity(0.65))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .background(Color.white.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color(red: 203/255, green: 213/255, blue: 225/255).opacity(0.12), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(MFColors.gold.opacity(0.2), lineWidth: 1)
         )
         .onChange(of: text.wrappedValue, perform: { _ in error = nil })
     }

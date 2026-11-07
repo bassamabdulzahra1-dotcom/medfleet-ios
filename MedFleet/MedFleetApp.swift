@@ -17,7 +17,8 @@ struct MedFleetApp: App {
                 .environmentObject(connectivity)
                 .environmentObject(posMonitor)
                 .environment(\.layoutDirection, .rightToLeft)
-                .tint(MFColors.gold)
+                .tint(MFColors.pine)
+                .preferredColorScheme(.light)
         }
     }
 }
@@ -105,7 +106,6 @@ struct RootView: View {
                     }
             }
         }
-        .preferredColorScheme(.dark)
         .onAppear {
             appState.setup(tokenStore: tokenStore)
         }
