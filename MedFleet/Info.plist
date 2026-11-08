@@ -17,19 +17,26 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.1.6</string>
+	<string>1.1.9</string>
 	<key>CFBundleVersion</key>
-	<string>8</string>
+	<string>11</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>نستخدم البصمة لتسجيل حضورك وانصرافك</string>
 	<key>NSCameraUsageDescription</key>
 	<string>MedFleet يحتاج الكاميرا لتصوير فواتير الشراء ومسحها.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>MedFleet يحتاج موقعك لتسجيل زيارات الصيدليات وتثبيت الإحداثيات.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>MedFleet يحتاج الوصول للصور لاختيار صورة الفاتورة ورفعها.</string>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 	<key>UILaunchScreen</key>
-	<dict/>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+	</dict>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
