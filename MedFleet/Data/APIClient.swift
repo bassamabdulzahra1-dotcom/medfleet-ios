@@ -220,11 +220,11 @@ final class APIClient {
         return r.data
     }
 
-    func buyerAttendancePunch(action: String) async throws -> AttendanceDayDTO {
+    func buyerAttendancePunch(action: String, lat: Double? = nil, lng: Double? = nil) async throws -> AttendanceDayDTO {
         let r: AttendanceDayResponse = try await request(
             path: "buyer/attendance",
             method: "POST",
-            body: AttendancePunchRequest(action: action)
+            body: AttendancePunchRequest(action: action, lat: lat, lng: lng)
         )
         return r.data
     }

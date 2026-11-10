@@ -156,12 +156,12 @@ final class LiveLookRepository: MedFleetRepository {
         return attendance.today(user)
     }
 
-    func registerAttendance(_ user: AppUser, action: AttendanceAction, at: Date) async throws -> AttendanceRecord {
+    func registerAttendance(_ user: AppUser, action: AttendanceAction, at: Date, lat: Double?, lng: Double?) async throws -> AttendanceRecord {
         let actionStr = action == .checkIn ? "check_in" : "check_out"
         guard let api else {
             return attendance.save(user, action: action, at: at)
         }
-        let dto = try await api.buyerAttendancePunch(action: actionStr)
+        let dto = try await api.buyerAttendancePunch(action: actionStr, lat: lat, lng: lng)
         let mapped = dto.toRecord(user: user)
         attendance.put(mapped)
         return mapped

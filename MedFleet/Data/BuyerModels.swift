@@ -561,6 +561,8 @@ struct BuyerSupplierListResponse: Decodable { let data: [BuyerSupplierOffice] }
 
 struct AttendancePunchRequest: Encodable {
     let action: String
+    let lat: Double?
+    let lng: Double?
 }
 
 struct AttendanceDayDTO: Decodable {
