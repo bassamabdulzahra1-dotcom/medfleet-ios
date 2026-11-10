@@ -220,6 +220,27 @@ final class APIClient {
         return r.data
     }
 
+    func buyerAttendancePunch(action: String) async throws -> AttendanceDayDTO {
+        let r: AttendanceDayResponse = try await request(
+            path: "buyer/attendance",
+            method: "POST",
+            body: AttendancePunchRequest(action: action)
+        )
+        return r.data
+    }
+
+    func buyerAttendanceToday() async throws -> AttendanceDayDTO {
+        let r: AttendanceDayResponse = try await get("buyer/attendance/today")
+        return r.data
+    }
+
+    func buyerAttendanceTeam(day: String?) async throws -> [AttendanceDayDTO] {
+        var path = "buyer/attendance/team"
+        if let day, !day.isEmpty { path += "?day=\(day)" }
+        let r: AttendanceTeamResponse = try await get(path)
+        return r.data
+    }
+
     func deleteBuyerAccount() async throws {
         let _: EmptyResponse = try await request(
             path: "buyer/account",

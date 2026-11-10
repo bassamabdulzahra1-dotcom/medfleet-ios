@@ -136,12 +136,16 @@ struct AttendanceView: View {
 
         switch await BiometricAuth.authenticate(reason: "تسجيل \(actionLabel)") {
         case .success:
-            let updated = await store.repo.registerAttendance(user, action: action, at: Date())
-            record = updated
-            store.attendanceVersion += 1
-            if action == .checkIn { mode = .checkOut }
-            let at = action == .checkIn ? updated.checkIn : updated.checkOut
-            show(.success, "تم تسجيل \(actionLabel)", "الساعة \(time12OrDash(at)) · تم التحقق من الهوية")
+            do {
+                let updated = try await store.repo.registerAttendance(user, action: action, at: Date())
+                record = updated
+                store.attendanceVersion += 1
+                if action == .checkIn { mode = .checkOut }
+                let at = action == .checkIn ? updated.checkIn : updated.checkOut
+                show(.success, "تم تسجيل \(actionLabel)", "الساعة \(time12OrDash(at)) · تم التحقق من الهوية")
+            } catch {
+                show(.failure, "تعذّر الحفظ على الخادم", "تأكد من الإنترنت وأعد المحاولة")
+            }
         case .failed:
             show(.failure, "لم يتم التحقق", "حاول مرة أخرى")
         case .unavailable:

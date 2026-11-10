@@ -10,7 +10,7 @@ protocol MedFleetRepository: AnyObject {
     func purchaseReturns() async -> [LookReturn]
 
     func myAttendanceToday(_ user: AppUser) async -> AttendanceRecord
-    func registerAttendance(_ user: AppUser, action: AttendanceAction, at: Date) async -> AttendanceRecord
+    func registerAttendance(_ user: AppUser, action: AttendanceAction, at: Date) async throws -> AttendanceRecord
     func teamAttendance(day: Date) async -> [AttendanceRecord]
 }
 

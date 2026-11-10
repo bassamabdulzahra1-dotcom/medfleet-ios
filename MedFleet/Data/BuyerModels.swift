@@ -558,3 +558,40 @@ struct BuyerSupplierOffice: Identifiable, Decodable, Hashable {
 }
 
 struct BuyerSupplierListResponse: Decodable { let data: [BuyerSupplierOffice] }
+
+struct AttendancePunchRequest: Encodable {
+    let action: String
+}
+
+struct AttendanceDayDTO: Decodable {
+    let userId: String?
+    let employeeName: String?
+    let email: String?
+    let jobTitle: String?
+    let workDate: String?
+    let checkIn: String?
+    let checkOut: String?
+    let shiftStart: String?
+    let shiftEnd: String?
+    let hourlyWage: Double?
+    let hours: Double?
+    let salary: Double?
+    let late: Bool?
+    let status: String?
+
+    enum CodingKeys: String, CodingKey {
+        case email, hours, salary, late, status
+        case userId = "user_id"
+        case employeeName = "employee_name"
+        case jobTitle = "job_title"
+        case workDate = "work_date"
+        case checkIn = "check_in"
+        case checkOut = "check_out"
+        case shiftStart = "shift_start"
+        case shiftEnd = "shift_end"
+        case hourlyWage = "hourly_wage"
+    }
+}
+
+struct AttendanceDayResponse: Decodable { let data: AttendanceDayDTO }
+struct AttendanceTeamResponse: Decodable { let data: [AttendanceDayDTO] }
