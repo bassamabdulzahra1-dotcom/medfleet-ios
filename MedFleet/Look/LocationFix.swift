@@ -69,6 +69,11 @@ private final class LocationBox: NSObject, CLLocationManagerDelegate {
             finish(nil)
             return
         }
+        // نرفض المواقع المزيّفة (برامج تغيير الموقع) والقراءات الضعيفة الدقة
+        if loc.sourceInformation?.isSimulatedBySoftware == true || loc.horizontalAccuracy < 0 || loc.horizontalAccuracy > 200 {
+            finish(nil)
+            return
+        }
         finish((loc.coordinate.latitude, loc.coordinate.longitude))
     }
 

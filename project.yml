@@ -33,8 +33,8 @@ targets:
       Release: configs/signing.xcconfig
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: net.medfleet.rep
-      MARKETING_VERSION: "1.1.11"
-      CURRENT_PROJECT_VERSION: 13
+      MARKETING_VERSION: "1.1.12"
+      CURRENT_PROJECT_VERSION: 14
       INFOPLIST_FILE: MedFleet/Info.plist
       CODE_SIGN_ENTITLEMENTS: MedFleet/MedFleet.entitlements
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

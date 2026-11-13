@@ -11,7 +11,7 @@ struct MedFleetApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            UpdateGate { RootView() }
                 .environmentObject(tokenStore)
                 .environmentObject(appState)
                 .environmentObject(connectivity)

@@ -158,8 +158,10 @@ final class LiveLookRepository: MedFleetRepository {
 
     func registerAttendance(_ user: AppUser, action: AttendanceAction, at: Date, lat: Double?, lng: Double?) async throws -> AttendanceRecord {
         let actionStr = action == .checkIn ? "check_in" : "check_out"
+        // بدون اتصال بالخادم ما نحفظ البصمة محلياً ونعرضها كأنها نجحت (هيچ ضاعت بصمات تشرين الثاني):
+        // نرجّع خطأ واضح حتى الموظف يعيد المحاولة.
         guard let api else {
-            return attendance.save(user, action: action, at: at)
+            throw APIError.http(0, "تعذّر الاتصال بالخادم — البصمة ما انسجلت، حاول مرة ثانية")
         }
         let dto = try await api.buyerAttendancePunch(action: actionStr, lat: lat, lng: lng)
         let mapped = dto.toRecord(user: user)
